@@ -145,6 +145,7 @@
         }
         .chat-history {
             flex: 1; overflow-y: auto; padding: 16px; background: #f7f7fa;
+            min-height: 180px;
         }
         .chat-msg { display: block; margin: 8px 0; }
         .chat-msg.me { text-align: right; }
@@ -154,13 +155,19 @@
         .chat-input-bar {
             display: flex; align-items: center; padding: 10px; border-top: 1px solid #eee; background: #fff;
             border-radius: 0 0 18px 18px;
+            gap: 8px;
         }
         .chat-input-bar input[type='text'] {
-            flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #a18cd1; margin-right: 8px;
+            flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #a18cd1;
         }
         .chat-input-bar button {
             background: #a18cd1; color: #fff; border: none; border-radius: 8px; margin-left: 4px; padding: 6px 10px; cursor: pointer;
             font-size: 18px;
+        }
+        .chat-anonymous {
+            display: flex; align-items: center; font-size: 15px; margin: 0 8px;
+            color: #a18cd1;
+            font-weight: bold;
         }
         .emoji-panel {
             background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 8px; margin: 0 10px 10px 10px;
@@ -222,10 +229,13 @@
             </div>
             <div class="chat-input-bar">
                 <input v-model="chatInput" @keyup.enter="sendMsg" placeholder="输入消息...">
-                <input type="file" @change="sendImage" accept="image/*" style="display:none;" ref="imgInput">
                 <button @click="$refs.imgInput.click()">📷</button>
                 <button @click="showEmojiPanel = !showEmojiPanel">😊</button>
+                <label class="chat-anonymous">
+                    <input type="checkbox" v-model="chatAnonymous"> 匿名
+                </label>
                 <button @click="sendMsg">发送</button>
+                <input type="file" @change="sendImage" accept="image/*" style="display:none;" ref="imgInput">
             </div>
             <div v-if="showEmojiPanel" class="emoji-panel">
                 <span v-for="e in emojiList" :key="e" @click="chooseEmoji(e)" v-html="emojiHtml(e)"></span>
@@ -309,7 +319,14 @@ createApp({
         },
         connectWS() {
             if (this.ws) return;
-            const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws/chat/' + this.user.id;
+            // 自动适配后端端口
+            let wsHost;
+            if (window.BASE_URL.startsWith('http')) {
+                wsHost = window.BASE_URL.replace(/^http/, 'ws').replace(/\/api$/, '');
+            } else {
+                wsHost = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8080';
+            }
+            const wsUrl = wsHost + '/ws/chat/' + this.user.id;
             this.ws = new WebSocket(wsUrl);
             this.ws.onmessage = (evt) => {
                 const msg = JSON.parse(evt.data);
@@ -326,6 +343,10 @@ createApp({
         },
         sendMsg() {
             if (!this.chatInput.trim()) return;
+            if (!this.ws || this.ws.readyState !== 1) {
+                alert('聊天连接未建立，请稍后重试');
+                return;
+            }
             const msg = {
                 toUserId: this.chatTarget.id,
                 content: this.chatInput,
@@ -339,6 +360,10 @@ createApp({
         async sendImage(e) {
             const file = e.target.files[0];
             if (!file) return;
+            if (!this.ws || this.ws.readyState !== 1) {
+                alert('聊天连接未建立，请稍后重试');
+                return;
+            }
             const formData = new FormData();
             formData.append('avatar', file);
             const resp = await fetch(BASE_URL + '/user/uploadAvatar', { method: 'POST', body: formData });
@@ -357,6 +382,10 @@ createApp({
             e.target.value = '';
         },
         chooseEmoji(e) {
+            if (!this.ws || this.ws.readyState !== 1) {
+                alert('聊天连接未建立，请稍后重试');
+                return;
+            }
             const msg = {
                 toUserId: this.chatTarget.id,
                 content: e,
