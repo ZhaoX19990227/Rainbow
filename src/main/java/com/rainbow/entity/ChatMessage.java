@@ -10,6 +10,6 @@ public class ChatMessage {
     private Long toUserId;
     private String content;
     private String type; // text/image/emoji
-    private Boolean isAnonymous;
+    private Boolean isAnonymous = false;
     private Date timestamp;
 } 

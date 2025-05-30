@@ -640,9 +640,17 @@
                     const msg = {
                         toUserId: this.chatTarget.id,
                         content: url,
-                        type: 'image'
+                        type: 'image',
+                        fromUserId: this.user.id,
+                        timestamp: Date.now()
                     };
                     this.ws.send(JSON.stringify(msg));
+
+                    this.$nextTick(() => {
+                        const el = this.$refs.chatHistory;
+                        if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
+                    });
+
                 } else {
                     alert('图片上传失败');
                 }
@@ -656,9 +664,17 @@
                 const msg = {
                     toUserId: this.chatTarget.id,
                     content: e,
-                    type: 'emoji'
+                    type: 'emoji',
+                    fromUserId: this.user.id,
+                    timestamp: Date.now()
                 };
                 this.ws.send(JSON.stringify(msg));
+
+                this.$nextTick(() => {
+                    const el = this.$refs.chatHistory;
+                    if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
+                });
+
                 this.showEmojiPanel = false;
             },
             emojiHtml(e) {
