@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rainbow.mapper.ChatMessageMapper">
+    <resultMap id="chatMessageMap" type="com.rainbow.entity.ChatMessage">
+        <id property="id" column="id" />
+        <result property="fromUserId" column="from_user_id" />
+        <result property="toUserId" column="to_user_id" />
+        <result property="content" column="content" />
+        <result property="type" column="type" />
+        <result property="isAnonymous" column="is_anonymous" />
+        <result property="timestamp" column="timestamp" />
+    </resultMap>
+    <insert id="insert" parameterType="com.rainbow.entity.ChatMessage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO chat_message (from_user_id, to_user_id, content, type, is_anonymous, timestamp)
+        VALUES (#{fromUserId}, #{toUserId}, #{content}, #{type}, #{isAnonymous}, NOW())
+    </insert>
+    <select id="findHistory" resultMap="chatMessageMap">
+        SELECT * FROM chat_message
+        WHERE (from_user_id = #{fromUserId} AND to_user_id = #{toUserId})
+           OR (from_user_id = #{toUserId} AND to_user_id = #{fromUserId})
+        ORDER BY timestamp DESC
+        LIMIT #{limit}
+    </select>
+</mapper> 

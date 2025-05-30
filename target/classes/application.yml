@@ -1,0 +1,28 @@
+spring:
+  profiles:
+    active: local
+  datasource:
+    url: jdbc:mysql://localhost:3306/rainbow
+    username: root
+    password: zx123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://120.46.13.61:3306/rainbow
+    username: root
+    password: zhaoxiang123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 20MB
