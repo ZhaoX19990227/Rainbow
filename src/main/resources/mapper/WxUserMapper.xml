@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rainbow.mapper.WxUserMapper">
+    <resultMap id="userMap" type="com.rainbow.entity.WxUser">
+        <id property="id" column="id" />
+        <result property="nickname" column="nickname" />
+        <result property="starSign" column="star_sign" />
+        <result property="birthday" column="birthday" />
+        <result property="height" column="height" />
+        <result property="weight" column="weight" />
+        <result property="attribute" column="attribute" />
+        <result property="location" column="location" />
+        <result property="latitude" column="latitude" />
+        <result property="longitude" column="longitude" />
+        <result property="password" column="password" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.rainbow.entity.WxUser" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO wx_user (nickname, star_sign, birthday, height, weight, attribute, location, latitude, longitude, password)
+        VALUES (#{nickname}, #{starSign}, #{birthday}, #{height}, #{weight}, #{attribute}, #{location}, #{latitude}, #{longitude}, #{password})
+    </insert>
+</mapper>
