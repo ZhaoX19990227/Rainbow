@@ -2,7 +2,9 @@ package com.rainbow.service;
 
 import com.rainbow.entity.WxUser;
 import com.rainbow.mapper.WxUserMapper;
+import com.rainbow.util.FileUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -24,13 +26,11 @@ public class WxUserService {
         return null;
     }
 
-    public int register(WxUser user) {
+    public int register(WxUser user, MultipartFile avatar) throws Exception {
         if (user.getBirthday() != null) {
             user.setAge(Period.between(user.getBirthday(), LocalDate.now()).getYears());
         }
-        if (user.getLatitude() != null && user.getLongitude() != null) {
-            user.setLocation(calcLocation(user.getLatitude(), user.getLongitude()));
-        }
+        // 头像已由前端上传并设置为URL，无需处理avatar文件
         return mapper.insert(user);
     }
 
@@ -44,15 +44,6 @@ public class WxUserService {
             }
         }
         return all;
-    }
-
-    private String calcLocation(double lat, double lon) {
-        if (lat >= 39 && lat <= 41 && lon >= 116 && lon <= 117) {
-            return "Beijing";
-        } else if (lat >= 30 && lat <= 32 && lon >= 120 && lon <= 122) {
-            return "Shanghai";
-        }
-        return "Unknown";
     }
 
     private double distance(double lat1, double lon1, double lat2, double lon2) {

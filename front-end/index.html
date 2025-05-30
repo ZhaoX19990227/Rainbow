@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Rainbow 社区</title>
+    <script src="config.js"></script>
     <script src="https://unpkg.com/vue@3"></script>
     <style>
         body {
@@ -10,22 +11,112 @@
             animation: gradient 10s ease infinite;
             background-size: 400% 400%;
             color: #fff;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         @keyframes gradient {
             0% {background-position: 0% 50%;}
             50% {background-position: 100% 50%;}
             100% {background-position: 0% 50%;}
         }
-        .container {max-width: 600px; margin: 50px auto; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px;}
-        input {width: 100%; padding: 8px; margin: 5px 0;}
-        button {width: 100%; padding: 8px; margin-top: 10px;}
-        #board {display:flex; flex-wrap:wrap; justify-content:center; gap:20px;}
-        .avatar-wrapper {position:relative; text-align:center;}
-        .avatar {width:80px; height:80px; border-radius:50%;}
-        .card {display:none; position:absolute; top:100%; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); padding:5px 10px; border-radius:4px; white-space:nowrap;}
-        .avatar-wrapper:hover .card {display:block;}
-        .current {border:2px solid #fff; border-radius:50%; padding:4px;}
-        .distance {margin-top:5px;}
+        .container {
+            max-width: 800px;
+            margin: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #board {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            margin: 0 auto;
+        }
+        .avatar-wrapper {
+            position: absolute;
+            transition: all 0.5s ease;
+            text-align: center;
+        }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        .avatar:hover {
+            transform: scale(1.1);
+        }
+        .card {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+            z-index: 100;
+            min-width: 150px;
+        }
+        .avatar-wrapper:hover .card {
+            display: block;
+        }
+        .current {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        .current .avatar {
+            border: 3px solid #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.5);
+        }
+        .distance {
+            margin-top: 5px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.8);
+        }
+        .user-info {
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        .attribute {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+            font-size: 12px;
+        }
+        .attribute-1 { background: #4CAF50; }
+        .attribute-0 { background: #f44336; }
+        .attribute-side { background: #2196F3; }
     </style>
 </head>
 <body>
@@ -35,32 +126,71 @@
         <input v-model="nickname" placeholder="昵称">
         <input type="password" v-model="password" placeholder="密码">
         <button @click="login">登录</button>
+        <p>还没有账号？<a href="#" @click="showRegister = true">立即注册</a></p>
     </div>
-    <div v-else id="board">
+    <div v-if="showRegister">
+        <h2>注册</h2>
+        <input v-model="registerForm.nickname" placeholder="昵称">
+        <input type="password" v-model="registerForm.password" placeholder="密码">
+        <input type="file" @change="handleAvatarUpload" accept="image/*">
+        <input v-model="registerForm.height" type="number" placeholder="身高(cm)">
+        <input v-model="registerForm.weight" type="number" placeholder="体重(kg)">
+        <input v-model="registerForm.location" placeholder="所在城市">
+        <select v-model="registerForm.attribute">
+            <option value="1">1</option>
+            <option value="0">0</option>
+            <option value="side">side</option>
+        </select>
+        <button @click="register">注册</button>
+        <button @click="showRegister = false">返回登录</button>
+    </div>
+    <div v-if="user" id="board">
         <div class="avatar-wrapper current">
-            <img :src="user.avatar" class="avatar">
+            <img :src="user.avatar || 'default-avatar.png'" class="avatar">
             <div class="card">
                 <p>{{user.nickname}}</p>
-                <p>{{user.height}}cm {{user.weight}}kg {{user.attribute}}</p>
+                <p class="user-info">
+                    {{user.height}}cm {{user.weight}}kg
+                    <span :class="'attribute attribute-' + user.attribute">{{user.attribute}}</span>
+                </p>
+                <p>{{user.location}}</p>
             </div>
-            <div class="distance">{{user.location}}</div>
         </div>
-        <div class="avatar-wrapper" v-for="u in users" :key="u.id">
-            <img :src="u.avatar" class="avatar">
+        <div class="avatar-wrapper" v-for="u in users" :key="u.id" :style="getAvatarStyle(u)">
+            <img :src="u.avatar || 'default-avatar.png'" class="avatar">
             <div class="card">
                 <p>{{u.nickname}}</p>
-                <p>{{u.height}}cm {{u.weight}}kg {{u.attribute}}</p>
+                <p class="user-info">
+                    {{u.height}}cm {{u.weight}}kg
+                    <span :class="'attribute attribute-' + u.attribute">{{u.attribute}}</span>
+                </p>
+                <p>{{u.location}}</p>
+                <p>{{u.distance ? u.distance.toFixed(1) + ' km' : ''}}</p>
             </div>
-            <div class="distance">{{u.distance ? u.distance.toFixed(1)+' km' : ''}}</div>
         </div>
     </div>
 </div>
 <script>
-const BASE_URL = '/api';
+const BASE_URL = window.BASE_URL;
 const { createApp } = Vue;
 createApp({
     data() {
-        return { nickname: '', password: '', user: null, users: [] };
+        return {
+            nickname: '',
+            password: '',
+            user: null,
+            users: [],
+            showRegister: false,
+            registerForm: {
+                nickname: '',
+                password: '',
+                avatar: null,
+                height: '',
+                weight: '',
+                location: '',
+                attribute: '1'
+            }
+        };
     },
     methods: {
         async login() {
@@ -68,8 +198,46 @@ createApp({
             if (resp.ok) {
                 this.user = await resp.json();
                 await this.loadUsers();
+                this.arrangeUsers();
             } else {
                 alert('登录失败');
+            }
+        },
+        async handleAvatarUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('avatar', file);
+            const resp = await fetch(BASE_URL + '/user/uploadAvatar', {
+                method: 'POST',
+                body: formData
+            });
+            if (resp.ok) {
+                this.registerForm.avatar = await resp.text();
+            } else {
+                alert('头像上传失败');
+            }
+        },
+        async register() {
+            const formData = new FormData();
+            formData.append('nickname', this.registerForm.nickname);
+            formData.append('password', this.registerForm.password);
+            formData.append('height', this.registerForm.height);
+            formData.append('weight', this.registerForm.weight);
+            formData.append('location', this.registerForm.location);
+            formData.append('attribute', this.registerForm.attribute);
+            formData.append('avatar', this.registerForm.avatar);
+
+            const resp = await fetch(BASE_URL + '/user/register', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (resp.ok) {
+                alert('注册成功');
+                this.showRegister = false;
+            } else {
+                alert('注册失败');
             }
         },
         async loadUsers() {
@@ -77,6 +245,29 @@ createApp({
             if (resp.ok) {
                 this.users = await resp.json();
             }
+        },
+        getAvatarStyle(user) {
+            if (!user.distance) return {};
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.min(user.distance * 10, 250);
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance;
+            return {
+                transform: `translate(${x}px, ${y}px)`,
+                transition: 'all 0.5s ease'
+            };
+        },
+        arrangeUsers() {
+            this.users.forEach(user => {
+                if (user.distance) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const distance = Math.min(user.distance * 10, 250);
+                    const x = Math.cos(angle) * distance;
+                    const y = Math.sin(angle) * distance;
+                    user.x = x;
+                    user.y = y;
+                }
+            });
         }
     }
 }).mount('#app');
