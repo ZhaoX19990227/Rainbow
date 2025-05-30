@@ -237,20 +237,13 @@
         }
 
         .chat-modal {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
-
         .chat-window {
-            width: 350px;
+            width: 450px; /* 增加宽度 */
+            min-height: 500px; /* 增加最小高度 */
+            max-height: 80vh; /* 最大高度 */
             background: #fff;
             border-radius: 18px;
             box-shadow: 0 8px 32px #a18cd1cc;
@@ -258,83 +251,139 @@
             flex-direction: column;
             padding: 0;
             position: relative;
+            overflow: hidden; /* 防止内容溢出圆角 */
         }
-
         .chat-header {
-            padding: 16px 18px;
+            padding: 14px 18px; /* 调整内边距 */
             font-size: 18px;
             font-weight: bold;
-            color: #43e97b;
+            color: #2196F3; /* 用户名颜色改为蓝色 */
             border-bottom: 1px solid #eee;
             background: linear-gradient(90deg, #fbc2eb 0%, #a6c1ee 100%);
             border-radius: 18px 18px 0 0;
+            display: flex; /* 使用 Flexbox 布局 */
+            justify-content: space-between; /* 元素之间留白 */
+            align-items: center;
+        }
+        .chat-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px; /* 调整关闭按钮大小 */
+            color: #888;
+            cursor: pointer;
+            padding: 0 4px; /* 调整关闭按钮内边距 */
+        }
+        .chat-header .close-btn:hover {
+             color: #333;
         }
 
         .chat-history {
             flex: 1;
+            min-height: 260px;
+            max-height: calc(80vh - 14px*2 - 18px - 12px - 12px - 28px); /* 动态计算最大高度 */
             overflow-y: auto;
-            padding: 12px;
+            padding: 16px;
+            background: #f7f7fa;
+            /* border-radius: 0 0 12px 12px; 不需要在历史记录区域设置底部圆角 */
         }
 
+        /* 聊天消息样式 */
         .chat-msg {
-            margin-bottom: 10px;
+            display: flex; /* 使用 flex 布局 */
+            margin-bottom: 15px; /* 增加消息间距 */
+            align-items: flex-start; /* 顶部对齐 */
         }
-
         .chat-msg.me {
-            text-align: right;
+            justify-content: flex-end; /* 我的消息靠右 */
         }
-
         .chat-msg.other {
-            text-align: left;
+            justify-content: flex-start; /* 对方消息靠左 */
         }
-
-        .chat-msg span {
-            padding: 8px;
+        .chat-msg .msg-avatar {
+            width: 36px; /* 头像大小 */
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-top: 4px; /* 微调头像位置 */
+        }
+        .chat-msg.me .msg-avatar {
+            margin-left: 12px; /* 我的头像在右侧 */
+        }
+        .chat-msg.other .msg-avatar {
+            margin-right: 12px; /* 对方头像在左侧 */
+        }
+        .chat-msg .msg-content {
+            max-width: 70%; /* 限制消息内容的宽度 */
+            padding: 10px 12px; /* 调整消息气泡内边距 */
+            border-radius: 10px; /* 消息气泡圆角 */
+            word-break: break-word; /* 自动换行 */
+        }
+        .chat-msg.me .msg-content {
+            background: linear-gradient(90deg, #84fab0 0%, #8fd3f4 100%); /* 我的消息背景 */
+            color: #333;
+        }
+        .chat-msg.other .msg-content {
+            background: #fff; /* 对方消息背景 */
+            color: #333;
+            border: 1px solid #eee;
+        }
+        .chat-msg .chat-img {
+            max-width: 180px; /* 图片消息最大宽度 */
+            height: auto;
             border-radius: 8px;
-            background: #f0f0f0;
-        }
-
-        .chat-msg.me span {
-            background: #dcf8c6;
         }
 
         .chat-input-bar {
-            padding: 12px;
+            padding: 12px 16px; /* 调整内边距 */
             border-top: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            background: #fafbfc;
+            border-radius: 0 0 18px 18px; /* 底部圆角 */
         }
-
         .chat-input-bar input {
-            width: 100%;
-            padding: 8px;
+            flex: 1; /* 输入框占据剩余空间 */
+            padding: 8px 10px; /* 调整内边距 */
             border: 1px solid #eee;
             border-radius: 8px;
+            margin-right: 8px;
+            font-size: 15px;
         }
-
+         .chat-input-bar input:focus {
+            outline: none;
+            border-color: #a6c1ee;
+            box-shadow: 0 0 4px rgba(166, 193, 238, 0.5);
+        }
         .chat-input-bar button {
-            padding: 8px 16px;
+            padding: 8px 12px; /* 调整按钮内边距 */
             border: none;
             border-radius: 8px;
-            background: #43e97b;
+            background: linear-gradient(90deg, #a18cd1, #fbc2eb); /* 按钮背景 */
             color: #fff;
+            font-size: 16px; /* 调整按钮字体大小 */
             cursor: pointer;
-            margin-left: 8px;
+            margin-left: 6px; /* 按钮间距 */
+            transition: opacity 0.2s;
         }
-
         .chat-input-bar button:hover {
-            background: #38c16e;
+            opacity: 0.9;
+        }
+        .chat-input-bar button:last-child {
+            margin-right: 0;
         }
 
         .emoji-panel {
-            padding: 12px;
+            padding: 10px 16px; /* 调整内边距 */
             border-top: 1px solid #eee;
+            background: #fff;
+            border-radius: 0 0 18px 18px;
         }
-
         .emoji-panel span {
-            padding: 8px;
-            border-radius: 8px;
+            padding: 6px; /* 调整表情内边距 */
+            border-radius: 6px;
             cursor: pointer;
+            font-size: 20px; /* 调整表情大小 */
         }
-
         .emoji-panel span:hover {
             background: #f0f0f0;
         }
@@ -390,11 +439,16 @@
                 <button class="close-btn" @click="closeChat">×</button>
             </div>
             <div class="chat-history" ref="chatHistory">
-                <div v-for="msg in chatHistory" :key="msg.id"
-                     :class="['chat-msg', msg.fromUserId === user.id ? 'me' : 'other']">
-                    <span v-if="msg.type==='text'">{{ msg.content }}</span>
-                    <img v-if="msg.type==='image'" :src="msg.content" class="chat-img">
-                    <span v-if="msg.type==='emoji'" v-html="emojiHtml(msg.content)"></span>
+                <div v-for="msg in chatHistory" :key="msg.id" :class="['chat-msg', msg.fromUserId === user.id ? 'me' : 'other']">
+                    <!-- 如果是对方的消息，显示对方头像 -->
+                    <img v-if="msg.fromUserId !== user.id && chatTarget" :src="chatTarget.avatar || 'default-avatar.png'" class="msg-avatar">
+                    <div class="msg-content">
+                        <span v-if="msg.type==='text'">{{ msg.content }}</span>
+                        <img v-if="msg.type==='image'" :src="msg.content" class="chat-img">
+                        <span v-if="msg.type==='emoji'" v-html="emojiHtml(msg.content)"></span>
+                    </div>
+                    <!-- 如果是我的消息，显示我的头像 -->
+                    <img v-if="msg.fromUserId === user.id && user" :src="user.avatar || 'default-avatar.png'" class="msg-avatar">
                 </div>
             </div>
             <div class="chat-input-bar">
