@@ -22,4 +22,9 @@ public class WxUserController {
     public WxUser login(@RequestParam String nickname, @RequestParam String password) {
         return service.login(nickname, password);
     }
+
+    @GetMapping("/list/{id}")
+    public java.util.List<WxUser> list(@PathVariable("id") Long id) {
+        return service.listWithDistance(id);
+    }
 }

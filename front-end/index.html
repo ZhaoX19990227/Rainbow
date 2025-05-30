@@ -16,31 +16,66 @@
             50% {background-position: 100% 50%;}
             100% {background-position: 0% 50%;}
         }
-        .container {max-width: 400px; margin: 100px auto; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px;}
+        .container {max-width: 600px; margin: 50px auto; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px;}
         input {width: 100%; padding: 8px; margin: 5px 0;}
         button {width: 100%; padding: 8px; margin-top: 10px;}
+        #board {display:flex; flex-wrap:wrap; justify-content:center; gap:20px;}
+        .avatar-wrapper {position:relative; text-align:center;}
+        .avatar {width:80px; height:80px; border-radius:50%;}
+        .card {display:none; position:absolute; top:100%; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.7); padding:5px 10px; border-radius:4px; white-space:nowrap;}
+        .avatar-wrapper:hover .card {display:block;}
+        .current {border:2px solid #fff; border-radius:50%; padding:4px;}
+        .distance {margin-top:5px;}
     </style>
 </head>
 <body>
 <div id="app" class="container">
-    <h2>登录</h2>
-    <input v-model="nickname" placeholder="昵称">
-    <input type="password" v-model="password" placeholder="密码">
-    <button @click="login">登录</button>
+    <div v-if="!user">
+        <h2>登录</h2>
+        <input v-model="nickname" placeholder="昵称">
+        <input type="password" v-model="password" placeholder="密码">
+        <button @click="login">登录</button>
+    </div>
+    <div v-else id="board">
+        <div class="avatar-wrapper current">
+            <img :src="user.avatar" class="avatar">
+            <div class="card">
+                <p>{{user.nickname}}</p>
+                <p>{{user.height}}cm {{user.weight}}kg {{user.attribute}}</p>
+            </div>
+            <div class="distance">{{user.location}}</div>
+        </div>
+        <div class="avatar-wrapper" v-for="u in users" :key="u.id">
+            <img :src="u.avatar" class="avatar">
+            <div class="card">
+                <p>{{u.nickname}}</p>
+                <p>{{u.height}}cm {{u.weight}}kg {{u.attribute}}</p>
+            </div>
+            <div class="distance">{{u.distance ? u.distance.toFixed(1)+' km' : ''}}</div>
+        </div>
+    </div>
 </div>
 <script>
+const BASE_URL = '/api';
 const { createApp } = Vue;
 createApp({
     data() {
-        return { nickname: '', password: '' };
+        return { nickname: '', password: '', user: null, users: [] };
     },
     methods: {
         async login() {
-            const resp = await fetch('/api/user/login?nickname=' + this.nickname + '&password=' + this.password, {method:'POST'});
+            const resp = await fetch(BASE_URL + '/user/login?nickname=' + this.nickname + '&password=' + this.password, {method:'POST'});
             if (resp.ok) {
-                alert('登录成功');
+                this.user = await resp.json();
+                await this.loadUsers();
             } else {
                 alert('登录失败');
+            }
+        },
+        async loadUsers() {
+            const resp = await fetch(BASE_URL + '/user/list/' + this.user.id);
+            if (resp.ok) {
+                this.users = await resp.json();
             }
         }
     }
