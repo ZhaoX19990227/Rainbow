@@ -49,15 +49,17 @@ public class ChatWebSocket {
         msg.setTimestamp(new java.util.Date());
         // 存储到数据库
         chatMessageMapper.insert(msg);
-        // 转发给目标用户
+        // 推送给目标用户，fromUserId为0时前端显示匿名
         Session toSession = userSessionMap.get(msg.getToUserId());
         if (toSession != null && toSession.isOpen()) {
             toSession.getBasicRemote().sendText(objectMapper.writeValueAsString(msg));
         }
-        // 也可以回显给自己（可选）
-        Session fromSession = userSessionMap.get(fromUserId);
-        if (fromSession != null && fromSession.isOpen()) {
-            fromSession.getBasicRemote().sendText(objectMapper.writeValueAsString(msg));
+        // 回显给自己（可选）
+        if (!msg.getIsAnonymous()) {
+            Session fromSession = userSessionMap.get(fromUserId);
+            if (fromSession != null && fromSession.isOpen()) {
+                fromSession.getBasicRemote().sendText(objectMapper.writeValueAsString(msg));
+            }
         }
     }
 
