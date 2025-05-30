@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Rainbow 社区</title>
+    <script src="https://unpkg.com/vue@3"></script>
+    <style>
+        body {
+            background: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+            animation: gradient 10s ease infinite;
+            background-size: 400% 400%;
+            color: #fff;
+        }
+        @keyframes gradient {
+            0% {background-position: 0% 50%;}
+            50% {background-position: 100% 50%;}
+            100% {background-position: 0% 50%;}
+        }
+        .container {max-width: 400px; margin: 100px auto; background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px;}
+        input {width: 100%; padding: 8px; margin: 5px 0;}
+        button {width: 100%; padding: 8px; margin-top: 10px;}
+    </style>
+</head>
+<body>
+<div id="app" class="container">
+    <h2>登录</h2>
+    <input v-model="nickname" placeholder="昵称">
+    <input type="password" v-model="password" placeholder="密码">
+    <button @click="login">登录</button>
+</div>
+<script>
+const { createApp } = Vue;
+createApp({
+    data() {
+        return { nickname: '', password: '' };
+    },
+    methods: {
+        async login() {
+            const resp = await fetch('/api/user/login?nickname=' + this.nickname + '&password=' + this.password, {method:'POST'});
+            if (resp.ok) {
+                alert('登录成功');
+            } else {
+                alert('登录失败');
+            }
+        }
+    }
+}).mount('#app');
+</script>
+</body>
+</html>
