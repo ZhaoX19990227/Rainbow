@@ -127,6 +127,46 @@
             background: #a18cd1;
             color: #fff;
         }
+        .chat-modal {
+            position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.18); z-index: 9999; display: flex; align-items: center; justify-content: center;
+        }
+        .chat-window {
+            width: 380px; background: rgba(255,255,255,0.95); border-radius: 18px; box-shadow: 0 8px 32px #a18cd1cc;
+            display: flex; flex-direction: column; padding: 0; position: relative; animation: popCard 0.3s;
+        }
+        .chat-header {
+            padding: 16px 18px; font-size: 18px; font-weight: bold; color: #a18cd1; border-bottom: 1px solid #eee;
+            background: linear-gradient(90deg, #fbc2eb 0%, #a6c1ee 100%);
+            border-radius: 18px 18px 0 0;
+        }
+        .close-btn {
+            background: none; border: none; font-size: 22px; color: #a18cd1; cursor: pointer; float: right;
+        }
+        .chat-history {
+            flex: 1; overflow-y: auto; padding: 16px; background: #f7f7fa;
+        }
+        .chat-msg { display: block; margin: 8px 0; }
+        .chat-msg.me { text-align: right; }
+        .chat-msg.other { text-align: left; }
+        .chat-img { max-width: 120px; max-height: 120px; border-radius: 8px; vertical-align: middle; }
+        .chat-meta { font-size: 12px; color: #888; margin-left: 6px; }
+        .chat-input-bar {
+            display: flex; align-items: center; padding: 10px; border-top: 1px solid #eee; background: #fff;
+            border-radius: 0 0 18px 18px;
+        }
+        .chat-input-bar input[type='text'] {
+            flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #a18cd1; margin-right: 8px;
+        }
+        .chat-input-bar button {
+            background: #a18cd1; color: #fff; border: none; border-radius: 8px; margin-left: 4px; padding: 6px 10px; cursor: pointer;
+            font-size: 18px;
+        }
+        .emoji-panel {
+            background: #fff; border: 1px solid #eee; border-radius: 8px; padding: 8px; margin: 0 10px 10px 10px;
+            display: flex; flex-wrap: wrap; gap: 6px;
+        }
+        .emoji-panel span { font-size: 22px; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -145,7 +185,7 @@
             </div>
         </div>
         <div class="avatar-wrapper" v-for="(u, idx) in users" :key="u.id" :style="getAvatarStyle(u, idx, users.length)">
-            <img :src="u.avatar || 'default-avatar.png'" class="avatar">
+            <img :src="u.avatar || 'default-avatar.png'" class="avatar" @click.stop="openChat(u)">
             <div class="card">
                 <p style="font-size:18px;font-weight:bold;color:#f44336;">{{u.nickname}}</p>
                 <p class="user-info">
@@ -162,6 +202,36 @@
             当前没有你的天菜哦～
         </div>
     </div>
+    <!-- 聊天弹窗 -->
+    <div v-if="chatTarget" class="chat-modal" @click.self="closeChat">
+        <div class="chat-window">
+            <div class="chat-header">
+                <span>{{ chatTarget.nickname }}（{{ chatTarget.location }}）</span>
+                <label style="float:right;font-size:14px;">
+                    <input type="checkbox" v-model="chatAnonymous"> 匿名
+                </label>
+                <button class="close-btn" @click="closeChat">×</button>
+            </div>
+            <div class="chat-history" ref="chatHistory">
+                <div v-for="msg in chatHistory" :key="msg.id" :class="['chat-msg', msg.fromUserId === user.id ? 'me' : 'other']">
+                    <span v-if="msg.type==='text'">{{ msg.content }}</span>
+                    <img v-if="msg.type==='image'" :src="msg.content" class="chat-img">
+                    <span v-if="msg.type==='emoji'" v-html="emojiHtml(msg.content)"></span>
+                    <span class="chat-meta" v-if="msg.isAnonymous">[匿名]</span>
+                </div>
+            </div>
+            <div class="chat-input-bar">
+                <input v-model="chatInput" @keyup.enter="sendMsg" placeholder="输入消息...">
+                <input type="file" @change="sendImage" accept="image/*" style="display:none;" ref="imgInput">
+                <button @click="$refs.imgInput.click()">📷</button>
+                <button @click="showEmojiPanel = !showEmojiPanel">😊</button>
+                <button @click="sendMsg">发送</button>
+            </div>
+            <div v-if="showEmojiPanel" class="emoji-panel">
+                <span v-for="e in emojiList" :key="e" @click="chooseEmoji(e)" v-html="emojiHtml(e)"></span>
+            </div>
+        </div>
+    </div>
 </div>
 <script>
 const BASE_URL = window.BASE_URL;
@@ -170,7 +240,14 @@ createApp({
     data() {
         return {
             user: null,
-            users: []
+            users: [],
+            chatTarget: null,
+            chatInput: '',
+            chatHistory: [],
+            chatAnonymous: false,
+            ws: null,
+            showEmojiPanel: false,
+            emojiList: ['😀','😂','😍','😎','😭','😡','👍','🎉','🥰','😏','😱','🤔','😴','😜','😇','🥳','🤩','😋','😢','😅','😆'],
         };
     },
     mounted() {
@@ -217,7 +294,92 @@ createApp({
         logout() {
             localStorage.removeItem('rainbow_user');
             window.location.href = 'login.html';
-        }
+        },
+        openChat(target) {
+            this.chatTarget = target;
+            this.chatInput = '';
+            this.chatHistory = [];
+            this.showEmojiPanel = false;
+            this.connectWS();
+            this.loadChatHistory();
+        },
+        closeChat() {
+            this.chatTarget = null;
+            if (this.ws) { this.ws.close(); this.ws = null; }
+        },
+        connectWS() {
+            if (this.ws) return;
+            const wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws/chat/' + this.user.id;
+            this.ws = new WebSocket(wsUrl);
+            this.ws.onmessage = (evt) => {
+                const msg = JSON.parse(evt.data);
+                if ((msg.fromUserId === this.user.id && msg.toUserId === this.chatTarget.id) ||
+                    (msg.fromUserId === this.chatTarget.id && msg.toUserId === this.user.id)) {
+                    this.chatHistory.push(msg);
+                    this.$nextTick(() => {
+                        const el = this.$refs.chatHistory;
+                        if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
+                    });
+                }
+            };
+            this.ws.onclose = () => { this.ws = null; };
+        },
+        sendMsg() {
+            if (!this.chatInput.trim()) return;
+            const msg = {
+                toUserId: this.chatTarget.id,
+                content: this.chatInput,
+                type: 'text',
+                isAnonymous: this.chatAnonymous
+            };
+            this.ws.send(JSON.stringify(msg));
+            this.chatInput = '';
+            this.showEmojiPanel = false;
+        },
+        async sendImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('avatar', file);
+            const resp = await fetch(BASE_URL + '/user/uploadAvatar', { method: 'POST', body: formData });
+            if (resp.ok) {
+                const url = await resp.text();
+                const msg = {
+                    toUserId: this.chatTarget.id,
+                    content: url,
+                    type: 'image',
+                    isAnonymous: this.chatAnonymous
+                };
+                this.ws.send(JSON.stringify(msg));
+            } else {
+                alert('图片上传失败');
+            }
+            e.target.value = '';
+        },
+        chooseEmoji(e) {
+            const msg = {
+                toUserId: this.chatTarget.id,
+                content: e,
+                type: 'emoji',
+                isAnonymous: this.chatAnonymous
+            };
+            this.ws.send(JSON.stringify(msg));
+            this.showEmojiPanel = false;
+        },
+        emojiHtml(e) {
+            return e;
+        },
+        async loadChatHistory() {
+            const resp = await fetch(BASE_URL + `/chat/history?fromUserId=${this.user.id}&toUserId=${this.chatTarget.id}&limit=30`);
+            if (resp.ok) {
+                this.chatHistory = await resp.json();
+                this.chatHistory.reverse();
+                this.$nextTick(() => {
+                    const el = this.$refs.chatHistory;
+                    if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
+                });
+            }
+        },
     }
 }).mount('#app');
 </script>
