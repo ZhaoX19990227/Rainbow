@@ -5,3 +5,4 @@
 .nycrc
 node_modules
 *.ts
+application.yml
