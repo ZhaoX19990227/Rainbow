@@ -138,9 +138,10 @@
         }
 
         .logout {
-            position: absolute;
-            top: 24px;
-            right: 36px;
+            /* 移除绝对定位和位置属性 */
+            /* position: absolute; */
+            /* top: 24px; */
+            /* right: 36px; */
             background: rgba(255, 255, 255, 0.7);
             color: #a18cd1;
             border: none;
@@ -151,6 +152,8 @@
             cursor: pointer;
             box-shadow: 0 2px 8px #a18cd1cc;
             transition: background 0.2s, color 0.2s;
+            /* 确保文本方向正常 */
+            writing-mode: horizontal-tb; /* 确保文字横向排列 */
         }
 
         .logout:hover {
@@ -387,11 +390,41 @@
         .emoji-panel span:hover {
             background: #f0f0f0;
         }
+
+        .top-right-controls {
+            position: absolute;
+            top: 24px;
+            right: 36px;
+            display: flex; /* 使用 Flexbox 布局 */
+            align-items: center; /* 垂直居中对齐 */
+            gap: 10px; /* **新增：设置元素之间的间距** */
+            z-index: 10; /* 确保在顶部显示 */
+        }
+
+        .notification-blink {
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff; /* 文字颜色 */
+            background-color: #ff4d4f; /* 背景颜色 */
+            padding: 4px 8px;
+            border-radius: 12px;
+            animation: blink-animation 1s infinite alternate; /* 闪烁动画 */
+            box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4);
+        }
+
+        @keyframes blink-animation {
+            0% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
 <div id="app" class="container">
-    <button class="logout" @click="logout">退出登录</button>
+    <div class="top-right-controls">
+        <!-- 未读消息提醒 -->
+        <span v-if="showUnreadNotification" class="notification-blink">新匿名消息</span>
+        <button class="logout" @click="logout">退出登录</button>
+    </div>
     <div v-if="user && users.length" id="board">
         <div class="avatar-wrapper current">
             <img :src="user.avatar || 'default-avatar.png'" class="avatar">
@@ -452,10 +485,12 @@
                 </div>
             </div>
             <div class="chat-input-bar">
-                <input v-model="chatInput" @keyup.enter="sendMsg" placeholder="输入消息...">
+                <input v-model="chatInput" @keyup.enter="sendMsg(false)" placeholder="输入消息...">
+                <input type="checkbox" id="anon-checkbox" v-model="sendAnonymous">
+                <label for="anon-checkbox" style="font-size: 14px; margin-right: 8px; color: #555;">匿名</label>
                 <button @click="$refs.imgInput.click()">📷</button>
                 <button @click="showEmojiPanel = !showEmojiPanel">😊</button>
-                <button @click="sendMsg">发送</button>
+                <button @click="sendMsg(sendAnonymous)">发送</button>
                 <input type="file" @change="sendImage" accept="image/*" style="display:none;" ref="imgInput">
             </div>
             <div v-if="showEmojiPanel" class="emoji-panel">
@@ -482,7 +517,10 @@
                 chatHistory: [],
                 ws: null,
                 showEmojiPanel: false,
-                emojiList: ['😀','😂','😍','😎','😭','😡','👍','🎉','🥰','😏','😱','🤔','😴','😜','😇','🥳','🤩','😋','😢','😅','😆'],
+                emojiList: ['😀','😂','😍','😎','😭','😡','👍','🎉','🥰','😏','😱','🤔','😴','😜','😇','🥳','🤩','��','😢','😅','😆'],
+                sendAnonymous: false,
+                unreadAnonymousPolling: null,
+                showUnreadNotification: false,
             };
         },
         mounted() {
@@ -493,6 +531,7 @@
             }
             this.user = JSON.parse(userStr);
             this.loadUsers();
+            this.startUnreadAnonymousPolling();
         },
         methods: {
             async loadUsers() {
@@ -620,42 +659,105 @@
                 if (window.BASE_URL.startsWith('http')) {
                     wsHost = window.BASE_URL.replace(/^http/, 'ws').replace(/\/api$/, '');
                 } else {
-                    wsHost = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8080';
+                    wsHost = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.location.hostname + ':8080';
                 }
                 const wsUrl = wsHost + '/ws/chat/' + this.user.id;
                 this.ws = new WebSocket(wsUrl);
                 this.ws.onmessage = (evt) => {
                     const msg = JSON.parse(evt.data);
-                    if ((msg.fromUserId === this.user.id && msg.toUserId === this.chatTarget?.id) ||
-                        (msg.fromUserId === this.chatTarget?.id && msg.toUserId === this.user.id)) {
+                    console.log("WebSocket收到消息:", msg); // Debugging
+
+                    // 判断消息是否是当前聊天对象之间的消息
+                    const isCurrentChatMsg = (msg.fromUserId === this.user.id && msg.toUserId === this.chatTarget?.id) ||
+                                             (msg.fromUserId === this.chatTarget?.id && msg.toUserId === this.user.id);
+
+                    // 判断是否是需要显示在聊天框的普通消息
+                    // 非匿名消息 或者 发送者是当前用户 (发送者自己发的匿名消息在聊天框显示)
+                    const shouldDisplayInChat = !msg.isAnonymous || (msg.isAnonymous && msg.fromUserId === this.user.id);
+
+
+                    if (isCurrentChatMsg && shouldDisplayInChat) {
                         this.chatHistory.push(msg);
                         this.$nextTick(() => {
                             const el = this.$refs.chatHistory;
                             if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
                         });
+                    } else if (msg.isAnonymous && msg.toUserId === this.user.id) {
+                         // **接收到匿名消息，但不在当前聊天框显示，通过轮询处理未读**
+                         console.log("收到一条新的匿名消息给当前用户，等待轮询更新未读计数");
+                         // 理想情况下，后端WebSocket在推送匿名消息时，除了将消息存入anonymous_message表，
+                         // 还应该触发未读计数的更新或推送一个未读通知。
+                         // 目前我们依赖轮询来更新未读计数。
                     }
+                    // 其他情况（非当前聊天对象的消息，或匿名消息给其他用户）不做处理
                 };
-                this.ws.onclose = () => { this.ws = null; };
+                this.ws.onclose = () => { this.ws = null; console.log("WebSocket连接关闭"); };
+                 this.ws.onopen = () => { console.log("WebSocket连接已建立"); };
+                 this.ws.onerror = (error) => { console.error("WebSocket错误:", error); };
             },
-            sendMsg() {
+            sendMsg(isAnonymous = false) {
                 if (!this.chatInput.trim()) return;
-        if (!this.ws || this.ws.readyState !== 1) {
-            alert('聊天连接未建立，请稍后重试');
-            return;
-        }
-        const msg = {
-            toUserId: this.chatTarget.id,
-            content: this.chatInput,
-            type: 'text',
-            isAnonymous: false
-        };
-        this.ws.send(JSON.stringify(msg));
-        this.chatInput = '';
-        this.showEmojiPanel = false;
-        this.$nextTick(() => {
-            const el = this.$refs.chatHistory;
-            if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
-        });
+                // 构建消息对象
+                const msgContent = this.chatInput;
+                this.chatInput = ''; // 先清空输入框
+
+                if (isAnonymous) {
+                    // **匿名发送逻辑：调用匿名发送接口**
+                    const anonymousBody = {
+                        fromUserId: this.user.id, // 发送者是当前用户
+                        toUserId: this.chatTarget.id, // 接收者是当前聊天对象
+                        content: msgContent,
+                        replyToId: null // 在聊天框发送的匿名消息，不是回复
+                    };
+                    fetch(BASE_URL + '/anonymous/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(anonymousBody)
+                    }).then(resp => {
+                        if (resp.ok) {
+                            // **发送者在自己的聊天框中立即显示匿名消息**
+                            // 标记为匿名消息，方便后续判断样式
+                             const displayMsg = {
+                                 fromUserId: this.user.id,
+                                 toUserId: this.chatTarget.id,
+                                 content: msgContent,
+                                 type: 'text',
+                                 isAnonymous: true, // 标记为匿名
+                                 timestamp: Date.now(),
+                                 // 假设后端返回了消息ID，可以在这里更新
+                                 // id: resp.json().id
+                             };
+                             this.chatHistory.push(displayMsg);
+                             this.$nextTick(() => {
+                                 const el = this.$refs.chatHistory;
+                                 if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
+                             });
+                        } else {
+                            alert('发送匿名消息失败');
+                        }
+                    }).catch(error => {
+                        console.error('发送匿名消息错误:', error);
+                        alert('发送匿名消息时发生错误');
+                    });
+
+                } else {
+                    // **普通发送逻辑：通过 WebSocket 发送**
+                     if (!this.ws || this.ws.readyState !== 1) {
+                         alert('聊天连接未建立，请稍后重试');
+                         return;
+                     }
+                     const msg = {
+                         toUserId: this.chatTarget.id,
+                         content: msgContent,
+                         type: 'text',
+                         isAnonymous: false // 明确标记为非匿名
+                     };
+                     this.ws.send(JSON.stringify(msg));
+                     // WebSocket onmessage 会处理将消息推送到 chatHistory，这里不需要手动push避免重复
+                }
+
+                this.showEmojiPanel = false;
+                this.sendAnonymous = false; // 发送后重置匿名状态
             },
             async sendImage(e) {
                 const file = e.target.files[0];
@@ -706,7 +808,58 @@
                         if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
                     });
                 }
+            },
+            startUnreadAnonymousPolling() {
+                // 每隔 1 秒检查一次未读匿名消息列表
+                this.unreadAnonymousPolling = setInterval(async () => {
+                    if (this.user) {
+                        try {
+                            const resp = await fetch(BASE_URL + `/anonymous/list?toUserId=${this.user.id}`);
+                            if (resp.ok) {
+                                const anonymousMsgs = await resp.json();
+                                // console.log("轮询获取到匿名消息:", anonymousMsgs); // Debugging
+
+                                const newUnreadAnonymous = {};
+                                anonymousMsgs.forEach(msg => {
+                                    if (newUnreadAnonymous[msg.fromUserId]) {
+                                        newUnreadAnonymous[msg.fromUserId]++;
+                                    } else {
+                                        newUnreadAnonymous[msg.fromUserId] = 1;
+                                    }
+                                });
+
+                                this.unreadAnonymous = newUnreadAnonymous;
+                                // console.log("更新后的未读匿名消息状态:", this.unreadAnonymous); // Debugging
+
+                                // **判断是否有未读消息并控制提醒显示**
+                                this.showUnreadNotification = Object.values(this.unreadAnonymous).some(count => count > 0);
+
+                            } else {
+                                 console.error('获取匿名消息列表失败:', resp.status);
+                                 this.unreadAnonymous = {};
+                                 this.showUnreadNotification = false; // 接口失败时不显示提醒
+                            }
+                        } catch (error) {
+                            console.error('轮询获取匿名消息错误:', error);
+                            this.unreadAnonymous = {};
+                            this.showUnreadNotification = false; // 错误发生时不显示提醒
+                        }
+                    } else {
+                         // 用户未登录时停止轮询并隐藏提醒
+                         this.stopUnreadAnonymousPolling();
+                         this.showUnreadNotification = false;
+                    }
+                }, 1000); // **轮询间隔改为 1000 毫秒 (1 秒)**
+            },
+            stopUnreadAnonymousPolling() {
+                if (this.unreadAnonymousPolling) {
+                    clearInterval(this.unreadAnonymousPolling);
+                    this.unreadAnonymousPolling = null;
+                }
             }
+        },
+        beforeUnmount() {
+            this.stopUnreadAnonymousPolling(); // **新增：停止轮询**
         }
     }).mount('#app');
 </script>
