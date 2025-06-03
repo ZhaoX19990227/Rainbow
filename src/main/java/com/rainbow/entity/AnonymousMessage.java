@@ -12,4 +12,5 @@ public class AnonymousMessage {
     private String content;
     private Long replyToId; // 被回复的匿名消息ID
     private Date timestamp;
+    private Boolean isRead; // Added field for read status
 }

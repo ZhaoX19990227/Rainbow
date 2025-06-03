@@ -11,17 +11,27 @@
         <result property="timestamp" column="timestamp"/>
     </resultMap>
     <insert id="insert" parameterType="com.rainbow.entity.AnonymousMessage" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO anonymous_message (from_user_id, to_user_id, content, reply_to_id, timestamp)
-        VALUES (#{fromUserId}, #{toUserId}, #{content}, #{replyToId}, NOW())
+        INSERT INTO anonymous_message (from_user_id, to_user_id, content, reply_to_id, timestamp, is_read)
+        VALUES (#{fromUserId}, #{toUserId}, #{content}, #{replyToId}, NOW(), FALSE)
     </insert>
     <select id="findByToUser" resultMap="anonymousMessageMap">
-        SELECT * FROM anonymous_message
+        SELECT id, from_user_id, to_user_id, content, reply_to_id, timestamp, is_read FROM anonymous_message
         WHERE to_user_id = #{toUserId}
-        ORDER BY timestamp DESC
+        ORDER BY is_read ASC, timestamp DESC
     </select>
     <select id="findReplies" resultMap="anonymousMessageMap">
         SELECT * FROM anonymous_message
         WHERE reply_to_id = #{replyToId}
         ORDER BY timestamp ASC
     </select>
+    <update id="markAsReadByMessageId">
+        UPDATE anonymous_message
+        SET is_read = TRUE
+        WHERE id = #{messageId} AND to_user_id = #{toUserId}
+    </update>
+    <update id="markAllAsReadByRecipient">
+         UPDATE anonymous_message
+         SET is_read = TRUE
+         WHERE to_user_id = #{toUserId} AND is_read = FALSE
+    </update>
 </mapper>

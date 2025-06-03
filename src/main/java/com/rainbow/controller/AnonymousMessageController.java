@@ -31,4 +31,9 @@ public class AnonymousMessageController {
     public List<AnonymousMessage> replies(@RequestParam Long replyToId) {
         return mapper.findReplies(replyToId);
     }
+
+    @PostMapping("/markAsRead")
+    public void markAsRead(@RequestParam Long toUserId) {
+        mapper.markAllAsReadByRecipient(toUserId);
+    }
 }

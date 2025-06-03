@@ -138,10 +138,6 @@
         }
 
         .logout {
-            /* 移除绝对定位和位置属性 */
-            /* position: absolute; */
-            /* top: 24px; */
-            /* right: 36px; */
             background: rgba(255, 255, 255, 0.7);
             color: #a18cd1;
             border: none;
@@ -152,8 +148,7 @@
             cursor: pointer;
             box-shadow: 0 2px 8px #a18cd1cc;
             transition: background 0.2s, color 0.2s;
-            /* 确保文本方向正常 */
-            writing-mode: horizontal-tb; /* 确保文字横向排列 */
+            writing-mode: horizontal-tb;
         }
 
         .logout:hover {
@@ -190,7 +185,8 @@
         }
 
         .anonymous-list-window {
-            width: 350px;
+            width: 380px;
+            max-height: 80vh;
             background: #fff;
             border-radius: 18px;
             box-shadow: 0 8px 32px #a18cd1cc;
@@ -198,6 +194,7 @@
             flex-direction: column;
             padding: 0;
             position: relative;
+            overflow: hidden;
         }
 
         .anonymous-list-header {
@@ -208,12 +205,27 @@
             border-bottom: 1px solid #eee;
             background: linear-gradient(90deg, #fbc2eb 0%, #a6c1ee 100%);
             border-radius: 18px 18px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+         .anonymous-list-header .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #888;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+        .anonymous-list-header .close-btn:hover {
+             color: #333;
         }
 
         .anonymous-list-body {
-            max-height: 300px;
+            max-height: calc(80vh - 16px*2 - 18px - 1px);
             overflow-y: auto;
             padding: 12px;
+            flex-grow: 1;
         }
 
         .anonymous-list-item {
@@ -223,6 +235,11 @@
             padding: 10px;
             cursor: pointer;
             transition: background 0.2s;
+            border: 1px solid #eee;
+        }
+
+        .anonymous-list-item:last-child {
+            margin-bottom: 0;
         }
 
         .anonymous-list-item:hover {
@@ -237,6 +254,46 @@
             font-size: 12px;
             color: #888;
             margin-top: 4px;
+            text-align: right;
+        }
+
+        .anonymous-reply-area {
+            padding: 12px;
+            border-top: 1px solid #eee;
+            background: #fafbfc;
+            display: flex;
+            align-items: center;
+            border-radius: 0 0 18px 18px;
+        }
+
+        .anonymous-reply-area input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-right: 8px;
+            font-size: 15px;
+        }
+
+         .anonymous-reply-area input:focus {
+            outline: none;
+            border-color: #a6c1ee;
+            box-shadow: 0 0 4px rgba(166, 193, 238, 0.5);
+        }
+
+        .anonymous-reply-area button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #a18cd1, #fbc2eb);
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .anonymous-reply-area button:hover {
+            opacity: 0.9;
         }
 
         .chat-modal {
@@ -244,9 +301,9 @@
             background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;
         }
         .chat-window {
-            width: 450px; /* 增加宽度 */
-            min-height: 500px; /* 增加最小高度 */
-            max-height: 80vh; /* 最大高度 */
+            width: 450px;
+            min-height: 500px;
+            max-height: 80vh;
             background: #fff;
             border-radius: 18px;
             box-shadow: 0 8px 32px #a18cd1cc;
@@ -254,27 +311,27 @@
             flex-direction: column;
             padding: 0;
             position: relative;
-            overflow: hidden; /* 防止内容溢出圆角 */
+            overflow: hidden;
         }
         .chat-header {
-            padding: 14px 18px; /* 调整内边距 */
+            padding: 14px 18px;
             font-size: 18px;
             font-weight: bold;
-            color: #2196F3; /* 用户名颜色改为蓝色 */
+            color: #2196F3;
             border-bottom: 1px solid #eee;
             background: linear-gradient(90deg, #fbc2eb 0%, #a6c1ee 100%);
             border-radius: 18px 18px 0 0;
-            display: flex; /* 使用 Flexbox 布局 */
-            justify-content: space-between; /* 元素之间留白 */
+            display: flex;
+            justify-content: space-between;
             align-items: center;
         }
         .chat-header .close-btn {
             background: none;
             border: none;
-            font-size: 24px; /* 调整关闭按钮大小 */
+            font-size: 24px;
             color: #888;
             cursor: pointer;
-            padding: 0 4px; /* 调整关闭按钮内边距 */
+            padding: 0 4px;
         }
         .chat-header .close-btn:hover {
              color: #333;
@@ -283,70 +340,68 @@
         .chat-history {
             flex: 1;
             min-height: 260px;
-            max-height: calc(80vh - 14px*2 - 18px - 12px - 12px - 28px); /* 动态计算最大高度 */
+            max-height: calc(80vh - 14px*2 - 18px - 12px - 12px - 28px);
             overflow-y: auto;
             padding: 16px;
             background: #f7f7fa;
-            /* border-radius: 0 0 12px 12px; 不需要在历史记录区域设置底部圆角 */
         }
 
-        /* 聊天消息样式 */
         .chat-msg {
-            display: flex; /* 使用 flex 布局 */
-            margin-bottom: 15px; /* 增加消息间距 */
-            align-items: flex-start; /* 顶部对齐 */
+            display: flex;
+            margin-bottom: 15px;
+            align-items: flex-start;
         }
         .chat-msg.me {
-            justify-content: flex-end; /* 我的消息靠右 */
+            justify-content: flex-end;
         }
         .chat-msg.other {
-            justify-content: flex-start; /* 对方消息靠左 */
+            justify-content: flex-start;
         }
         .chat-msg .msg-avatar {
-            width: 36px; /* 头像大小 */
+            width: 36px;
             height: 36px;
             border-radius: 50%;
             object-fit: cover;
-            margin-top: 4px; /* 微调头像位置 */
+            margin-top: 4px;
         }
         .chat-msg.me .msg-avatar {
-            margin-left: 12px; /* 我的头像在右侧 */
+            margin-left: 12px;
         }
         .chat-msg.other .msg-avatar {
-            margin-right: 12px; /* 对方头像在左侧 */
+            margin-right: 12px;
         }
         .chat-msg .msg-content {
-            max-width: 70%; /* 限制消息内容的宽度 */
-            padding: 10px 12px; /* 调整消息气泡内边距 */
-            border-radius: 10px; /* 消息气泡圆角 */
-            word-break: break-word; /* 自动换行 */
+            max-width: 70%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            word-break: break-word;
         }
         .chat-msg.me .msg-content {
-            background: linear-gradient(90deg, #84fab0 0%, #8fd3f4 100%); /* 我的消息背景 */
+            background: linear-gradient(90deg, #84fab0 0%, #8fd3f4 100%);
             color: #333;
         }
         .chat-msg.other .msg-content {
-            background: #fff; /* 对方消息背景 */
+            background: #fff;
             color: #333;
             border: 1px solid #eee;
         }
         .chat-msg .chat-img {
-            max-width: 180px; /* 图片消息最大宽度 */
+            max-width: 180px;
             height: auto;
             border-radius: 8px;
         }
 
         .chat-input-bar {
-            padding: 12px 16px; /* 调整内边距 */
+            padding: 12px 16px;
             border-top: 1px solid #eee;
             display: flex;
             align-items: center;
             background: #fafbfc;
-            border-radius: 0 0 18px 18px; /* 底部圆角 */
+            border-radius: 0 0 18px 18px;
         }
         .chat-input-bar input {
-            flex: 1; /* 输入框占据剩余空间 */
-            padding: 8px 10px; /* 调整内边距 */
+            flex: 1;
+            padding: 8px 10px;
             border: 1px solid #eee;
             border-radius: 8px;
             margin-right: 8px;
@@ -358,14 +413,14 @@
             box-shadow: 0 0 4px rgba(166, 193, 238, 0.5);
         }
         .chat-input-bar button {
-            padding: 8px 12px; /* 调整按钮内边距 */
+            padding: 8px 12px;
             border: none;
             border-radius: 8px;
-            background: linear-gradient(90deg, #a18cd1, #fbc2eb); /* 按钮背景 */
+            background: linear-gradient(90deg, #a18cd1, #fbc2eb);
             color: #fff;
-            font-size: 16px; /* 调整按钮字体大小 */
+            font-size: 16px;
             cursor: pointer;
-            margin-left: 6px; /* 按钮间距 */
+            margin-left: 6px;
             transition: opacity 0.2s;
         }
         .chat-input-bar button:hover {
@@ -376,16 +431,16 @@
         }
 
         .emoji-panel {
-            padding: 10px 16px; /* 调整内边距 */
+            padding: 10px 16px;
             border-top: 1px solid #eee;
             background: #fff;
             border-radius: 0 0 18px 18px;
         }
         .emoji-panel span {
-            padding: 6px; /* 调整表情内边距 */
+            padding: 6px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 20px; /* 调整表情大小 */
+            font-size: 20px;
         }
         .emoji-panel span:hover {
             background: #f0f0f0;
@@ -395,34 +450,39 @@
             position: absolute;
             top: 24px;
             right: 36px;
-            display: flex; /* 使用 Flexbox 布局 */
-            align-items: center; /* 垂直居中对齐 */
-            gap: 10px; /* **新增：设置元素之间的间距** */
-            z-index: 10; /* 确保在顶部显示 */
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 10;
         }
 
         .notification-blink {
             font-size: 14px;
             font-weight: bold;
-            color: #fff; /* 文字颜色 */
-            background-color: #ff4d4f; /* 背景颜色 */
+            color: #fff;
+            background-color: #ff4d4f;
             padding: 4px 8px;
             border-radius: 12px;
-            animation: blink-animation 1s infinite alternate; /* 闪烁动画 */
+            animation: blink-animation 1s infinite alternate;
             box-shadow: 0 2px 8px rgba(255, 77, 79, 0.4);
+            cursor: pointer;
         }
 
         @keyframes blink-animation {
             0% { opacity: 1; }
-            100% { opacity: 0; }
+            100% { opacity: 0.5; }
+        }
+
+        .anonymous-list-item.selected {
+            background: #d4edda;
+            border-color: #28a745;
         }
     </style>
 </head>
 <body>
 <div id="app" class="container">
     <div class="top-right-controls">
-        <!-- 未读消息提醒 -->
-        <span v-if="showUnreadNotification" class="notification-blink">新匿名消息</span>
+        <span v-if="showUnreadNotification" class="notification-blink" @click="openAnonymousList">{{ showUnreadNotificationCount }} 新匿名消息</span>
         <button class="logout" @click="logout">退出登录</button>
     </div>
     <div v-if="user && users.length" id="board">
@@ -439,7 +499,7 @@
         </div>
         <div class="avatar-wrapper" v-for="(u, idx) in users" :key="u.id" :style="getAvatarStyle(u, idx, users.length)">
             <img :src="u.avatar || 'default-avatar.png'" class="avatar" @click.stop="openChat(u)">
-            <div v-if="unreadAnonymous[u.id] > 0" class="unread-anonymous" @click.stop="openAnonymousList(u.id)">{{
+            <div v-if="unreadAnonymous[u.id] > 0" class="unread-anonymous" @click.stop="openAnonymousListFromBubble(u.id)">{{
                 unreadAnonymous[u.id] }}
             </div>
             <div class="card">
@@ -455,13 +515,21 @@
     </div>
     <div v-if="showAnonymousList" class="anonymous-list-modal" @click.self="closeAnonymousList">
         <div class="anonymous-list-window">
-            <div class="anonymous-list-header">匿名消息</div>
+            <div class="anonymous-list-header">
+                <span>匿名消息</span>
+                 <button class="close-btn" @click="closeAnonymousList">×</button>
+            </div>
             <div class="anonymous-list-body">
-                <div v-for="msg in anonymousList" :key="msg.id" class="anonymous-list-item"
+                <div v-for="msg in sortedAnonymousList" :key="msg.id" :class="['anonymous-list-item', replyToAnonymous && replyToAnonymous.id === msg.id ? 'selected' : '']"
                      @click="replyAnonymous(msg)">
                     <div class="anonymous-content">{{ msg.content }}</div>
                     <div class="anonymous-time">{{ formatTime(msg.timestamp) }}</div>
                 </div>
+                 <div v-if="sortedAnonymousList.length === 0" style="text-align: center; color: #888; padding: 20px;">暂无匿名消息</div>
+            </div>
+             <div v-if="replyToAnonymous" class="anonymous-reply-area">
+                <input v-model="anonymousReplyContent" @keyup.enter="sendReplyToAnonymous" :placeholder="'回复给 ' + getAnonymousSenderNickname(replyToAnonymous.fromUserId) + '...'">
+                <button @click="sendReplyToAnonymous">发送</button>
             </div>
         </div>
     </div>
@@ -473,24 +541,20 @@
             </div>
             <div class="chat-history" ref="chatHistory">
                 <div v-for="msg in chatHistory" :key="msg.id" :class="['chat-msg', msg.fromUserId === user.id ? 'me' : 'other']">
-                    <!-- 如果是对方的消息，显示对方头像 -->
                     <img v-if="msg.fromUserId !== user.id && chatTarget" :src="chatTarget.avatar || 'default-avatar.png'" class="msg-avatar">
                     <div class="msg-content">
                         <span v-if="msg.type==='text'">{{ msg.content }}</span>
                         <img v-if="msg.type==='image'" :src="msg.content" class="chat-img">
                         <span v-if="msg.type==='emoji'" v-html="emojiHtml(msg.content)"></span>
                     </div>
-                    <!-- 如果是我的消息，显示我的头像 -->
                     <img v-if="msg.fromUserId === user.id && user" :src="user.avatar || 'default-avatar.png'" class="msg-avatar">
                 </div>
             </div>
             <div class="chat-input-bar">
-                <input v-model="chatInput" @keyup.enter="sendMsg(false)" placeholder="输入消息...">
-                <input type="checkbox" id="anon-checkbox" v-model="sendAnonymous">
-                <label for="anon-checkbox" style="font-size: 14px; margin-right: 8px; color: #555;">匿名</label>
+                <input v-model="chatInput" @keyup.enter="sendMsg" placeholder="输入消息...">
                 <button @click="$refs.imgInput.click()">📷</button>
                 <button @click="showEmojiPanel = !showEmojiPanel">😊</button>
-                <button @click="sendMsg(sendAnonymous)">发送</button>
+                <button @click="sendMsg">发送</button>
                 <input type="file" @change="sendImage" accept="image/*" style="display:none;" ref="imgInput">
             </div>
             <div v-if="showEmojiPanel" class="emoji-panel">
@@ -511,17 +575,25 @@
                 showAnonymousList: false,
                 anonymousList: [],
                 replyToAnonymous: null,
-                anonymousReplyInput: '',
+                anonymousReplyContent: '',
                 chatTarget: null,
                 chatInput: '',
                 chatHistory: [],
                 ws: null,
                 showEmojiPanel: false,
-                emojiList: ['😀','😂','😍','😎','😭','😡','👍','🎉','🥰','😏','😱','🤔','😴','😜','😇','🥳','🤩','��','😢','😅','😆'],
+                emojiList: ['😀','😂','😍','😎','😭','😡','👍','🎉','🥰','😏','😱','🤔','😴','😜','😇','🥳','🤩','','😢','😅','😆'],
                 sendAnonymous: false,
                 unreadAnonymousPolling: null,
                 showUnreadNotification: false,
+                showUnreadNotificationCount: 0,
             };
+        },
+        computed: {
+            sortedAnonymousList() {
+                return [...this.anonymousList].sort((a, b) => {
+                    return new Date(b.timestamp) - new Date(a.timestamp);
+                });
+            }
         },
         mounted() {
             const userStr = localStorage.getItem('rainbow_user');
@@ -532,71 +604,62 @@
             this.user = JSON.parse(userStr);
             this.loadUsers();
             this.startUnreadAnonymousPolling();
+            this.connectWS();
         },
         methods: {
             async loadUsers() {
                 const resp = await fetch(BASE_URL + '/user/list/' + this.user.id);
                 if (resp.ok) {
                     let allUsers = await resp.json();
-                    // 过滤掉自己
                     this.users = allUsers.filter(u => u.id !== this.user.id);
                     this.arrangeUsers();
                 }
             },
             arrangeUsers() {
-                const centerX = 350; // 圆盘中心 X 坐标 (基于 #board 700x700)
-                const centerY = 350; // 圆盘中心 Y 坐标
-                const baseDistance = 200; // **增加基础扩散距离**
-                const distanceScale = 40; // **增加距离缩放因子**
-                const maxDistance = 350; // **调整最大扩散距离**
+                const centerX = 350;
+                const centerY = 350;
+                const baseDistance = 220;
+                const distanceScale = 50;
+                const maxDistance = 320;
+                const avatarSize = 90;
+                const cardWidth = 220;
+                const minSpacing = 20;
+                const angularStep = this.users.length > 0 ? (Math.PI * 2) / this.users.length : 0;
 
-                const totalOthers = this.users.length;
-
-                // 打乱用户顺序，避免按固定索引排列造成规律性
                 const shuffledUsers = [...this.users].sort(() => Math.random() - 0.5);
 
-                shuffledUsers.forEach((user) => { // idx is not directly used for angle now
-                    // 使用一个随机角度
-                    const angle = Math.random() * Math.PI * 2;
+                shuffledUsers.forEach((user, index) => {
+                    const angle = index * angularStep + (Math.random() - 0.5) * (angularStep * 0.5);
 
-                    // 根据用户距离计算扩散程度，加上基础距离，并限制在最大范围内
                     let distance = user.distance ? Math.min(user.distance * distanceScale + baseDistance, maxDistance) : baseDistance;
 
-                    // 计算用户头像中心相对于圆盘中心的偏移量
+                    distance = Math.max(distance, avatarSize/2 + cardWidth/2 + minSpacing);
+
                     user.offsetX = Math.cos(angle) * distance;
                     user.offsetY = Math.sin(angle) * distance;
 
-                    // 计算头像wrapper的最终位置 (基于圆盘中心，并考虑头像尺寸居中)
-                    user.finalX = centerX + user.offsetX - 45; // 减去头像宽度的一半 (90/2)
-                    user.finalY = centerY + user.offsetY - 45; // 减去头像高度的一半 (90/2)
+                    user.finalX = centerX + user.offsetX - avatarSize/2;
+                    user.finalY = centerY + user.offsetY - avatarSize/2;
 
-                     // 保留原始索引以便设置 zIndex (如果需要按原始顺序层叠)
-                     // 或者根据距离设置 zIndex (距离越近 zIndex 越高)
-                     user.originalIndex = this.users.findIndex(u => u.id === user.id); // Find original index
-                     user.calculatedDistance = distance; // Store calculated distance for zIndex
+                    user.originalIndex = this.users.findIndex(u => u.id === user.id);
+                    user.calculatedDistance = distance;
                 });
 
-                // 将打乱并计算好位置的用户重新赋值给 users，保留原始顺序以确保 Vue 的 key 和 transition 正确
                 this.users.forEach(user => {
-                     const found = shuffledUsers.find(u => u.id === user.id);
-                     if (found) {
-                         user.finalX = found.finalX;
-                         user.finalY = found.finalY;
-                         user.calculatedDistance = found.calculatedDistance;
-                     }
+                    const found = shuffledUsers.find(u => u.id === user.id);
+                    if (found) {
+                        user.finalX = found.finalX;
+                        user.finalY = found.finalY;
+                        user.calculatedDistance = found.calculatedDistance;
+                    }
                 });
-                // 可以选择根据 calculatedDistance 重新排序 users 数组，以便 zIndex 和渲染顺序一致
                 this.users.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
-
             },
-            getAvatarStyle(user, idx, total) { // idx and total now refer to the sorted users array
-                 // 使用 arrangeUsers 中计算好的最终位置 finalX 和 finalY
-                 // zIndex 可以使用 sorted index (idx) 或 calculatedDistance
-                 // 使用 sorted index (idx) 确保距离近的在上面 (zIndex 高)
-                 return {
-                     transform: `translate(${user.finalX}px, ${user.finalY}px)`,
-                     zIndex: idx + 1 // 距离越近（排序靠后），zIndex 越高
-                 };
+            getAvatarStyle(user, idx, total) {
+                return {
+                    transform: `translate(${user.finalX}px, ${user.finalY}px)`,
+                    zIndex: idx + 1
+                };
             },
             logout() {
                 localStorage.removeItem('rainbow_user');
@@ -609,176 +672,207 @@
                 this.showEmojiPanel = false;
                 this.connectWS();
                 this.loadChatHistory();
+                this.showAnonymousList = false;
             },
-            async openAnonymousList(userId) {
+            async openAnonymousList() {
                 this.showAnonymousList = true;
                 const resp = await fetch(BASE_URL + `/anonymous/list?toUserId=${this.user.id}`);
                 if (resp.ok) {
                     this.anonymousList = await resp.json();
+                    console.log("匿名消息列表加载完成:", this.anonymousList);
+                    for (const senderId in this.unreadAnonymous) {
+                        if (this.unreadAnonymous.hasOwnProperty(senderId)) {
+                            this.unreadAnonymous[senderId] = 0;
+                        }
+                    }
+                    this.updateTotalUnreadNotificationCount();
+                    console.log("打开匿名列表后，前端未读计数已清零并更新提醒。");
+                } else {
+                    console.error("加载匿名消息列表失败:", resp.status);
+                    this.anonymousList = [];
                 }
-                this.unreadAnonymous[userId] = 0; // 清零未读
+                this.replyToAnonymous = null;
+                this.anonymousReplyContent = '';
+                this.chatTarget = null;
+            },
+            openAnonymousListFromBubble(userId) {
+                this.openAnonymousList();
+                if (userId) {
+                    this.unreadAnonymous[userId] = 0;
+                    this.updateTotalUnreadNotificationCount();
+                }
             },
             closeAnonymousList() {
                 this.showAnonymousList = false;
                 this.replyToAnonymous = null;
-                this.anonymousReplyInput = '';
+                this.anonymousReplyContent = '';
             },
-            async replyAnonymous(msg) {
+            replyAnonymous(msg) {
                 this.replyToAnonymous = msg;
-                this.anonymousReplyInput = '';
-                // 可选：加载该匿名消息的回复链
-                // const resp = await fetch(BASE_URL + `/anonymous/replies?replyToId=${msg.id}`);
-                // if (resp.ok) { ... }
+                this.anonymousReplyContent = '';
+                console.log("准备回复匿名消息:", msg);
+            },
+            sendReplyToAnonymous() {
+                if (!this.anonymousReplyContent.trim() || !this.replyToAnonymous) {
+                    return;
+                }
+
+                if (!this.ws || this.ws.readyState !== 1) {
+                    alert('聊天连接未建立，请稍后重试');
+                    return;
+                }
+
+                const msg = {
+                    toUserId: this.replyToAnonymous.fromUserId,
+                    content: this.anonymousReplyContent.trim(),
+                    type: 'text',
+                    isAnonymous: false
+                };
+
+                console.log("发送非匿名回复:", msg);
+                this.ws.send(JSON.stringify(msg));
+
+                this.anonymousReplyContent = '';
+                this.replyToAnonymous = null;
+                alert('回复已发送');
+                if (this.replyToAnonymous && this.replyToAnonymous.fromUserId) {
+                    this.unreadAnonymous[this.replyToAnonymous.fromUserId] = 0;
+                    this.updateTotalUnreadNotificationCount();
+                }
             },
             async sendAnonymousReply() {
-                if (!this.anonymousReplyInput.trim()) return;
-                const body = {
-                    fromUserId: 0,
-                    toUserId: this.replyToAnonymous.fromUserId, // 回复给原匿名消息发送者
-                    content: this.anonymousReplyInput,
-                    replyToId: this.replyToAnonymous.id
-                };
-                await fetch(BASE_URL + '/anonymous/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                this.anonymousReplyInput = '';
-                // 可选：刷新列表
+                console.warn("sendAnonymousReply method is likely redundant with sendReplyToAnonymous for the requested feature.");
             },
             formatTime(ts) {
-                return new Date(ts).toLocaleString();
+                const date = new Date(ts);
+                const year = date.getFullYear();
+                const month = ('0' + (date.getMonth() + 1)).slice(-2);
+                const day = ('0' + date.getDate()).slice(-2);
+                const hours = ('0' + date.getHours()).slice(-2);
+                const minutes = ('0' + date.getMinutes()).slice(-2);
+                const seconds = ('0' + date.getSeconds()).slice(-2);
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
             },
             closeChat() {
                 this.chatTarget = null;
-                if (this.ws) { this.ws.close(); this.ws = null; }
             },
             connectWS() {
-                if (this.ws) return;
+                if (this.ws && this.ws.readyState === 1) {
+                    console.log("WebSocket already connected.");
+                    return;
+                }
+                if (this.ws) {
+                    this.ws.close();
+                    this.ws = null;
+                }
+
                 let wsHost;
                 if (window.BASE_URL.startsWith('http')) {
                     wsHost = window.BASE_URL.replace(/^http/, 'ws').replace(/\/api$/, '');
                 } else {
-                    wsHost = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.location.hostname + ':8080';
+                    wsHost = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8080';
                 }
                 const wsUrl = wsHost + '/ws/chat/' + this.user.id;
                 this.ws = new WebSocket(wsUrl);
                 this.ws.onmessage = (evt) => {
                     const msg = JSON.parse(evt.data);
-                    console.log("WebSocket收到消息:", msg); // Debugging
+                    console.log("WebSocket收到消息:", msg);
 
-                    // 判断消息是否是当前聊天对象之间的消息
-                    const isCurrentChatMsg = (msg.fromUserId === this.user.id && msg.toUserId === this.chatTarget?.id) ||
-                                             (msg.fromUserId === this.chatTarget?.id && msg.toUserId === this.user.id);
+                    const isCurrentStandardChatMsg = !msg.isAnonymous &&
+                                                     this.chatTarget &&
+                                                     ((msg.fromUserId === this.user.id && msg.toUserId === this.chatTarget.id) ||
+                                                      (msg.fromUserId === this.chatTarget.id && msg.toUserId === this.user.id));
 
-                    // 判断是否是需要显示在聊天框的普通消息
-                    // 非匿名消息 或者 发送者是当前用户 (发送者自己发的匿名消息在聊天框显示)
-                    const shouldDisplayInChat = !msg.isAnonymous || (msg.isAnonymous && msg.fromUserId === this.user.id);
+                    const isAnonymousMsgForMe = msg.isAnonymous && msg.toUserId === this.user.id;
 
-
-                    if (isCurrentChatMsg && shouldDisplayInChat) {
+                    if (isCurrentStandardChatMsg) {
                         this.chatHistory.push(msg);
                         this.$nextTick(() => {
                             const el = this.$refs.chatHistory;
                             if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
                         });
-                    } else if (msg.isAnonymous && msg.toUserId === this.user.id) {
-                         // **接收到匿名消息，但不在当前聊天框显示，通过轮询处理未读**
-                         console.log("收到一条新的匿名消息给当前用户，等待轮询更新未读计数");
-                         // 理想情况下，后端WebSocket在推送匿名消息时，除了将消息存入anonymous_message表，
-                         // 还应该触发未读计数的更新或推送一个未读通知。
-                         // 目前我们依赖轮询来更新未读计数。
+                    } else if (isAnonymousMsgForMe) {
+                        console.log("收到一条新的匿名消息给当前用户，更新未读计数");
+                        this.unreadAnonymous[msg.fromUserId] = (this.unreadAnonymous[msg.fromUserId] || 0) + 1;
+                        this.updateTotalUnreadNotificationCount();
+
+                        if (this.showAnonymousList) {
+                            this.loadAnonymousMessages();
+                        }
+
                     }
-                    // 其他情况（非当前聊天对象的消息，或匿名消息给其他用户）不做处理
                 };
                 this.ws.onclose = () => { this.ws = null; console.log("WebSocket连接关闭"); };
                  this.ws.onopen = () => { console.log("WebSocket连接已建立"); };
                  this.ws.onerror = (error) => { console.error("WebSocket错误:", error); };
             },
+            updateTotalUnreadNotificationCount() {
+                this.showUnreadNotificationCount = Object.values(this.unreadAnonymous).reduce((sum, count) => sum + count, 0);
+                this.showUnreadNotification = this.showUnreadNotificationCount > 0;
+            },
+            getAnonymousSenderNickname(senderId) {
+                const user = this.users.find(u => u.id === senderId);
+                return user ? user.nickname : '该用户';
+            },
             sendMsg(isAnonymous = false) {
-                if (!this.chatInput.trim()) return;
-                // 构建消息对象
-                const msgContent = this.chatInput;
-                this.chatInput = ''; // 先清空输入框
-
-                if (isAnonymous) {
-                    // **匿名发送逻辑：调用匿名发送接口**
-                    const anonymousBody = {
-                        fromUserId: this.user.id, // 发送者是当前用户
-                        toUserId: this.chatTarget.id, // 接收者是当前聊天对象
-                        content: msgContent,
-                        replyToId: null // 在聊天框发送的匿名消息，不是回复
-                    };
-                    fetch(BASE_URL + '/anonymous/send', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(anonymousBody)
-                    }).then(resp => {
-                        if (resp.ok) {
-                            // **发送者在自己的聊天框中立即显示匿名消息**
-                            // 标记为匿名消息，方便后续判断样式
-                             const displayMsg = {
-                                 fromUserId: this.user.id,
-                                 toUserId: this.chatTarget.id,
-                                 content: msgContent,
-                                 type: 'text',
-                                 isAnonymous: true, // 标记为匿名
-                                 timestamp: Date.now(),
-                                 // 假设后端返回了消息ID，可以在这里更新
-                                 // id: resp.json().id
-                             };
-                             this.chatHistory.push(displayMsg);
-                             this.$nextTick(() => {
-                                 const el = this.$refs.chatHistory;
-                                 if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
-                             });
-                        } else {
-                            alert('发送匿名消息失败');
-                        }
-                    }).catch(error => {
-                        console.error('发送匿名消息错误:', error);
-                        alert('发送匿名消息时发生错误');
-                    });
-
-                } else {
-                    // **普通发送逻辑：通过 WebSocket 发送**
-                     if (!this.ws || this.ws.readyState !== 1) {
-                         alert('聊天连接未建立，请稍后重试');
-                         return;
-                     }
-                     const msg = {
-                         toUserId: this.chatTarget.id,
-                         content: msgContent,
-                         type: 'text',
-                         isAnonymous: false // 明确标记为非匿名
-                     };
-                     this.ws.send(JSON.stringify(msg));
-                     // WebSocket onmessage 会处理将消息推送到 chatHistory，这里不需要手动push避免重复
+                if (!this.chatInput.trim()) {
+                    return;
                 }
 
-                this.showEmojiPanel = false;
-                this.sendAnonymous = false; // 发送后重置匿名状态
+                if (!this.ws || this.ws.readyState !== 1) {
+                    alert('聊天连接未建立，请稍后重试');
+                    return;
+                }
+                 if (!this.chatTarget) {
+                     console.error('Cannot send message: chat target is null');
+                     alert('无法发送消息：未指定接收者');
+                     return;
+                 }
+
+                const msgContent = this.chatInput.trim();
+                this.chatInput = '';
+
+                const msg = {
+                    toUserId: this.chatTarget.id,
+                    content: msgContent,
+                    type: 'text',
+                    isAnonymous: false
+                };
+
+                this.ws.send(JSON.stringify(msg));
             },
             async sendImage(e) {
                 const file = e.target.files[0];
                 if (!file) return;
                 if (!this.ws || this.ws.readyState !== 1) {
                     alert('聊天连接未建立，请稍后重试');
+                    e.target.value = '';
                     return;
                 }
+                 if (!this.chatTarget) {
+                     alert('无法发送图片：未指定接收者');
+                      e.target.value = '';
+                     return;
+                 }
+
                 const formData = new FormData();
-                formData.append('avatar', file);
-                const resp = await fetch(BASE_URL + '/user/uploadAvatar', { method: 'POST', body: formData });
+                formData.append('image', file);
+                const resp = await fetch(BASE_URL + '/chat/uploadImage', { method: 'POST', body: formData });
                 if (resp.ok) {
                     const url = await resp.text();
                     const msg = {
                         toUserId: this.chatTarget.id,
                         content: url,
-                        type: 'image'
+                        type: 'image',
+                        isAnonymous: false
                     };
                     this.ws.send(JSON.stringify(msg));
                 } else {
-                    alert('图片上传失败');
+                     resp.text().then(text => {
+                         alert('图片上传失败: ' + text);
+                     }).catch(() => {
+                         alert('图片上传失败');
+                     });
                 }
                 e.target.value = '';
             },
@@ -787,10 +881,15 @@
                     alert('聊天连接未建立，请稍后重试');
                     return;
                 }
+                 if (!this.chatTarget) {
+                      alert('无法发送表情：未指定接收者');
+                      return;
+                  }
                 const msg = {
                     toUserId: this.chatTarget.id,
                     content: e,
-                    type: 'emoji'
+                    type: 'emoji',
+                    isAnonymous: false
                 };
                 this.ws.send(JSON.stringify(msg));
                 this.showEmojiPanel = false;
@@ -799,6 +898,7 @@
                 return e;
             },
             async loadChatHistory() {
+                if (!this.user || !this.chatTarget) return;
                 const resp = await fetch(BASE_URL + `/chat/history?fromUserId=${this.user.id}&toUserId=${this.chatTarget.id}&limit=30`);
                 if (resp.ok) {
                     this.chatHistory = await resp.json();
@@ -807,59 +907,71 @@
                         const el = this.$refs.chatHistory;
                         if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
                     });
+                } else {
+                     console.error("加载聊天记录失败:", resp.status);
+                     this.chatHistory = [];
                 }
             },
             startUnreadAnonymousPolling() {
-                // 每隔 1 秒检查一次未读匿名消息列表
                 this.unreadAnonymousPolling = setInterval(async () => {
                     if (this.user) {
                         try {
                             const resp = await fetch(BASE_URL + `/anonymous/list?toUserId=${this.user.id}`);
                             if (resp.ok) {
                                 const anonymousMsgs = await resp.json();
-                                // console.log("轮询获取到匿名消息:", anonymousMsgs); // Debugging
-
                                 const newUnreadAnonymous = {};
                                 anonymousMsgs.forEach(msg => {
-                                    if (newUnreadAnonymous[msg.fromUserId]) {
-                                        newUnreadAnonymous[msg.fromUserId]++;
-                                    } else {
-                                        newUnreadAnonymous[msg.fromUserId] = 1;
+                                    if (msg.toUserId === this.user.id) {
+                                        if (newUnreadAnonymous[msg.fromUserId]) {
+                                            newUnreadAnonymous[msg.fromUserId]++;
+                                        } else {
+                                            newUnreadAnonymous[msg.fromUserId] = 1;
+                                        }
                                     }
                                 });
 
                                 this.unreadAnonymous = newUnreadAnonymous;
-                                // console.log("更新后的未读匿名消息状态:", this.unreadAnonymous); // Debugging
-
-                                // **判断是否有未读消息并控制提醒显示**
-                                this.showUnreadNotification = Object.values(this.unreadAnonymous).some(count => count > 0);
+                                const totalUnreadNow = Object.values(this.unreadAnonymous).reduce((sum, count) => sum + count, 0);
+                                if (totalUnreadNow !== this.showUnreadNotificationCount) {
+                                    console.log(`未读匿名消息总数变化: ${this.showUnreadNotificationCount} -> ${totalUnreadNow}`);
+                                    this.updateTotalUnreadNotificationCount();
+                                }
 
                             } else {
                                  console.error('获取匿名消息列表失败:', resp.status);
                                  this.unreadAnonymous = {};
-                                 this.showUnreadNotification = false; // 接口失败时不显示提醒
+                                 this.updateTotalUnreadNotificationCount();
                             }
                         } catch (error) {
                             console.error('轮询获取匿名消息错误:', error);
                             this.unreadAnonymous = {};
-                            this.showUnreadNotification = false; // 错误发生时不显示提醒
+                             this.updateTotalUnreadNotificationCount();
                         }
                     } else {
-                         // 用户未登录时停止轮询并隐藏提醒
                          this.stopUnreadAnonymousPolling();
                          this.showUnreadNotification = false;
+                         this.showUnreadNotificationCount = 0;
                     }
-                }, 1000); // **轮询间隔改为 1000 毫秒 (1 秒)**
+                }, 3000);
             },
             stopUnreadAnonymousPolling() {
                 if (this.unreadAnonymousPolling) {
                     clearInterval(this.unreadAnonymousPolling);
                     this.unreadAnonymousPolling = null;
+                     console.log("Stopped anonymous polling.");
                 }
+            },
+            async markAnonymousMessagesAsRead(senderId = null) {
+                console.warn("Marking anonymous messages as read is not yet implemented in the backend.");
             }
         },
         beforeUnmount() {
-            this.stopUnreadAnonymousPolling(); // **新增：停止轮询**
+            this.stopUnreadAnonymousPolling();
+            if (this.ws) {
+                this.ws.close();
+                this.ws = null;
+                 console.log("WebSocket closed on unmount.");
+            }
         }
     }).mount('#app');
 </script>
