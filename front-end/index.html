@@ -551,12 +551,12 @@
                 </div>
             </div>
             <div class="chat-input-bar">
-                <input v-model="chatInput" @keyup.enter="sendMsg" placeholder="输入消息...">
+                <input v-model="chatInput" @keyup.enter="sendMsg(sendAnonymous)" placeholder="输入消息...">
                 <input type="checkbox" id="anon-checkbox" v-model="sendAnonymous">
                 <label for="anon-checkbox" style="font-size: 14px; margin-right: 8px; color: #555;">匿名</label>
                 <button @click="$refs.imgInput.click()">📷</button>
                 <button @click="showEmojiPanel = !showEmojiPanel">😊</button>
-                <button @click="sendMsg">发送</button>
+                <button @click="sendMsg(sendAnonymous)">发送</button>
                 <input type="file" @change="sendImage" accept="image/*" style="display:none;" ref="imgInput">
             </div>
             <div v-if="showEmojiPanel" class="emoji-panel">
