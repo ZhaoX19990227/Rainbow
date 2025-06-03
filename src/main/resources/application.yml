@@ -1,17 +1,39 @@
+server:
+  port: 8989
+
 spring:
   profiles:
     active: local
   datasource:
-    url: jdbc:mysql://localhost:3306/rainbow
+    url: jdbc:mysql://localhost:3306/rainbow?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
     username: root
-    password: zx123456
+    password: zhaoxiang123
     driver-class-name: com.mysql.cj.jdbc.Driver
   servlet:
     multipart:
       max-file-size: 10MB
-      max-request-size: 20MB
+      max-request-size: 10MB
 mybatis:
   mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.rainbow.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+# 文件上传配置
+file:
+  upload:
+    path: /usr/images/
+    allowed-types: image/jpeg,image/png,image/gif
+    max-size: 10485760  # 10MB
+
+# SFTP配置
+sftp:
+  host: 120.46.13.61
+  port: 22
+  username: 120.46.13.61
+  password: ZhaoX19990227
+  remote-directory: /usr/images/
+
 ---
 spring:
   config:

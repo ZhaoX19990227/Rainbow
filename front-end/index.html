@@ -811,7 +811,7 @@
                 if (window.BASE_URL.startsWith('http')) {
                     wsHost = window.BASE_URL.replace(/^http/, 'ws').replace(/\/api$/, '');
                 } else {
-                    wsHost = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8080';
+                    wsHost = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.hostname + ':8989';
                 }
                 const wsUrl = wsHost + '/ws/chat/' + this.user.id;
                 this.ws = new WebSocket(wsUrl);
