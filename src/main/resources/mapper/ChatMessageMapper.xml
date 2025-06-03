@@ -9,12 +9,11 @@
         <result property="content" column="content" />
         <result property="type" column="type" />
         <result property="isAnonymous" column="is_anonymous" />
-        <result property="replyToId" column="reply_to_id" />
         <result property="timestamp" column="timestamp" />
     </resultMap>
     <insert id="insert" parameterType="com.rainbow.entity.ChatMessage" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO chat_message (from_user_id, to_user_id, content, type, is_anonymous, reply_to_id, timestamp)
-        VALUES (#{fromUserId}, #{toUserId}, #{content}, #{type}, #{isAnonymous}, #{replyToId}, NOW())
+        INSERT INTO chat_message (from_user_id, to_user_id, content, type, is_anonymous, timestamp)
+        VALUES (#{fromUserId}, #{toUserId}, #{content}, #{type}, #{isAnonymous}, NOW())
     </insert>
     <select id="findHistory" resultMap="chatMessageMap">
         SELECT * FROM chat_message
