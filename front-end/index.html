@@ -552,6 +552,8 @@
             </div>
             <div class="chat-input-bar">
                 <input v-model="chatInput" @keyup.enter="sendMsg" placeholder="输入消息...">
+                <input type="checkbox" id="anon-checkbox" v-model="sendAnonymous">
+                <label for="anon-checkbox" style="font-size: 14px; margin-right: 8px; color: #555;">匿名</label>
                 <button @click="$refs.imgInput.click()">📷</button>
                 <button @click="showEmojiPanel = !showEmojiPanel">😊</button>
                 <button @click="sendMsg">发送</button>
@@ -591,6 +593,9 @@
         computed: {
             sortedAnonymousList() {
                 return [...this.anonymousList].sort((a, b) => {
+                    if (a.isRead !== b.isRead) {
+                        return a.isRead ? 1 : -1;
+                    }
                     return new Date(b.timestamp) - new Date(a.timestamp);
                 });
             }
@@ -680,13 +685,24 @@
                 if (resp.ok) {
                     this.anonymousList = await resp.json();
                     console.log("匿名消息列表加载完成:", this.anonymousList);
-                    for (const senderId in this.unreadAnonymous) {
-                        if (this.unreadAnonymous.hasOwnProperty(senderId)) {
-                            this.unreadAnonymous[senderId] = 0;
+                    try {
+                        const markReadResp = await fetch(BASE_URL + `/anonymous/markAllAsRead?toUserId=${this.user.id}`, { method: 'POST' });
+                        if (markReadResp.ok) {
+                            console.log("成功调用后端标记所有匿名消息为已读。");
+                            for (const senderId in this.unreadAnonymous) {
+                                if (this.unreadAnonymous.hasOwnProperty(senderId)) {
+                                    this.unreadAnonymous[senderId] = 0;
+                                }
+                            }
+                            this.updateTotalUnreadNotificationCount();
+                        } else {
+                            console.error("调用后端标记已读接口失败:", markReadResp.status);
+                            this.updateTotalUnreadNotificationCount();
                         }
+                    } catch (error) {
+                        console.error("调用后端标记已读接口发生错误:", error);
+                        this.updateTotalUnreadNotificationCount();
                     }
-                    this.updateTotalUnreadNotificationCount();
-                    console.log("打开匿名列表后，前端未读计数已清零并更新提醒。");
                 } else {
                     console.error("加载匿名消息列表失败:", resp.status);
                     this.anonymousList = [];
@@ -741,7 +757,50 @@
                 }
             },
             async sendAnonymousReply() {
-                console.warn("sendAnonymousReply method is likely redundant with sendReplyToAnonymous for the requested feature.");
+                if (!this.anonymousReplyContent.trim() || !this.replyToAnonymous) {
+                    return;
+                }
+
+                if (!this.ws || this.ws.readyState !== 1) {
+                    alert('聊天连接未建立，请稍后重试');
+                    return;
+                }
+
+                const msg = {
+                    fromUserId: this.user.id,
+                    toUserId: this.replyToAnonymous.fromUserId,
+                    content: this.anonymousReplyContent.trim(),
+                    type: 'text',
+                    isAnonymous: true,
+                    replyToId: this.replyToAnonymous.id
+                };
+
+                console.log("发送匿名回复:", msg);
+                this.ws.send(JSON.stringify(msg));
+
+                this.anonymousReplyContent = '';
+                alert('回复已发送 (匿名)');
+
+                if (this.replyToAnonymous && this.replyToAnonymous.id && this.user) {
+                    try {
+                        const markReadResp = await fetch(BASE_URL + `/anonymous/markSingleAsRead?messageId=${this.replyToAnonymous.id}&toUserId=${this.user.id}`, { method: 'POST' });
+                        if (markReadResp.ok) {
+                            console.log(`成功调用后端标记消息 ${this.replyToAnonymous.id} 为已读。`);
+                            const repliedMsg = this.anonymousList.find(m => m.id === this.replyToAnonymous.id);
+                            if (repliedMsg) {
+                                repliedMsg.isRead = true;
+                                this.anonymousList.sort((a, b) => {
+                                    if (a.isRead !== b.isRead) { return a.isRead ? 1 : -1; }
+                                    return new Date(b.timestamp) - new Date(a.timestamp);
+                                });
+                            }
+                        } else {
+                            console.error("调用后端标记单条已读接口失败:", markReadResp.status);
+                        }
+                    } catch (error) {
+                        console.error("调用后端标记单条已读接口发生错误:", error);
+                    }
+                }
             },
             formatTime(ts) {
                 const date = new Date(ts);
@@ -815,31 +874,68 @@
                 return user ? user.nickname : '该用户';
             },
             sendMsg(isAnonymous = false) {
-                if (!this.chatInput.trim()) {
-                    return;
+                if (!this.chatInput.trim()) return;
+                // 构建消息对象
+                const msgContent = this.chatInput;
+                this.chatInput = ''; // 先清空输入框
+
+                if (isAnonymous) {
+                    // **匿名发送逻辑：调用匿名发送接口**
+                    const anonymousBody = {
+                        fromUserId: this.user.id, // 发送者是当前用户
+                        toUserId: this.chatTarget.id, // 接收者是当前聊天对象
+                        content: msgContent,
+                        replyToId: null // 在聊天框发送的匿名消息，不是回复
+                    };
+                    fetch(BASE_URL + '/anonymous/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(anonymousBody)
+                    }).then(resp => {
+                        if (resp.ok) {
+                            // **发送者在自己的聊天框中立即显示匿名消息**
+                            // 标记为匿名消息，方便后续判断样式
+                             const displayMsg = {
+                                 fromUserId: this.user.id,
+                                 toUserId: this.chatTarget.id,
+                                 content: msgContent,
+                                 type: 'text',
+                                 isAnonymous: true, // 标记为匿名
+                                 timestamp: Date.now(),
+                                 // 假设后端返回了消息ID，可以在这里更新
+                                 // id: resp.json().id
+                             };
+                             this.chatHistory.push(displayMsg);
+                             this.$nextTick(() => {
+                                 const el = this.$refs.chatHistory;
+                                 if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
+                             });
+                        } else {
+                            alert('发送匿名消息失败');
+                        }
+                    }).catch(error => {
+                        console.error('发送匿名消息错误:', error);
+                        alert('发送匿名消息时发生错误');
+                    });
+
+                } else {
+                    // **普通发送逻辑：通过 WebSocket 发送**
+                     if (!this.ws || this.ws.readyState !== 1) {
+                         alert('聊天连接未建立，请稍后重试');
+                         return;
+                     }
+                     const msg = {
+                         toUserId: this.chatTarget.id,
+                         content: msgContent,
+                         type: 'text',
+                         isAnonymous: false // 明确标记为非匿名
+                     };
+                     this.ws.send(JSON.stringify(msg));
+                     // WebSocket onmessage 会处理将消息推送到 chatHistory，这里不需要手动push避免重复
                 }
 
-                if (!this.ws || this.ws.readyState !== 1) {
-                    alert('聊天连接未建立，请稍后重试');
-                    return;
-                }
-                 if (!this.chatTarget) {
-                     console.error('Cannot send message: chat target is null');
-                     alert('无法发送消息：未指定接收者');
-                     return;
-                 }
-
-                const msgContent = this.chatInput.trim();
-                this.chatInput = '';
-
-                const msg = {
-                    toUserId: this.chatTarget.id,
-                    content: msgContent,
-                    type: 'text',
-                    isAnonymous: false
-                };
-
-                this.ws.send(JSON.stringify(msg));
+                this.showEmojiPanel = false;
+                this.sendAnonymous = false; // 发送后重置匿名状态
             },
             async sendImage(e) {
                 const file = e.target.files[0];

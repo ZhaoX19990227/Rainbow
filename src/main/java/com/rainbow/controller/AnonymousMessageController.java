@@ -18,7 +18,19 @@ public class AnonymousMessageController {
 
     @PostMapping("/send")
     public int send(@RequestBody AnonymousMessage msg) {
-        msg.setFromUserId(0L); // 强制匿名
+        if (msg.getReplyToId() == null) {
+             msg.setFromUserId(0L); // Keep 0L for initial anonymous messages
+        } else {
+            // For replies, assume the provided fromUserId is the actual user ID
+            // No need to force 0L here if frontend sends the correct user ID
+        }
+
+        if (msg.getTimestamp() == null) {
+            msg.setTimestamp(new java.util.Date());
+        }
+
+        msg.setIsRead(false); // Ensure isRead is set to false on insert
+
         return mapper.insert(msg);
     }
 
@@ -32,8 +44,19 @@ public class AnonymousMessageController {
         return mapper.findReplies(replyToId);
     }
 
-    @PostMapping("/markAsRead")
-    public void markAsRead(@RequestParam Long toUserId) {
+    @PostMapping("/markAllAsRead")
+    public void markAllAsRead(@RequestParam Long toUserId) {
+        if (toUserId == null) {
+             return;
+        }
         mapper.markAllAsReadByRecipient(toUserId);
+    }
+
+    @PostMapping("/markSingleAsRead")
+    public void markSingleAsRead(@RequestParam Long messageId, @RequestParam Long toUserId) {
+         if (messageId == null || toUserId == null) {
+              return;
+         }
+         mapper.markAsReadByMessageId(messageId, toUserId);
     }
 }
