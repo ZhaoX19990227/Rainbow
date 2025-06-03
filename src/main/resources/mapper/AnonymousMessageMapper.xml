@@ -9,14 +9,15 @@
         <result property="content" column="content"/>
         <result property="replyToId" column="reply_to_id"/>
         <result property="timestamp" column="timestamp"/>
+        <result property="isRead" column="is_read"/>
     </resultMap>
     <insert id="insert" parameterType="com.rainbow.entity.AnonymousMessage" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO anonymous_message (from_user_id, to_user_id, content, reply_to_id, timestamp, is_read)
         VALUES (#{fromUserId}, #{toUserId}, #{content}, #{replyToId}, NOW(), FALSE)
     </insert>
     <select id="findByToUser" resultMap="anonymousMessageMap">
-        SELECT id, from_user_id, to_user_id, content, reply_to_id, timestamp, is_read FROM anonymous_message
-        WHERE to_user_id = #{toUserId}
+        SELECT * FROM anonymous_message
+        WHERE to_user_id = #{toUserId} AND is_read = FALSE
         ORDER BY is_read ASC, timestamp DESC
     </select>
     <select id="findReplies" resultMap="anonymousMessageMap">

@@ -23,5 +23,6 @@ CREATE TABLE IF NOT EXISTS chat_message (
                                             content TEXT NOT NULL,
                                             type VARCHAR(20) NOT NULL, -- text/image/emoji
                                             is_anonymous TINYINT(1) DEFAULT 0,
+                                            reply_to_id BIGINT, -- 被回复的消息ID
                                             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 );

@@ -3,8 +3,10 @@ package com.rainbow.entity;
 
 import lombok.Data;
 import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnonymousMessage {
     private Long id;
     private Long fromUserId;

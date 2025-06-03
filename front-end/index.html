@@ -499,9 +499,9 @@
         </div>
         <div class="avatar-wrapper" v-for="(u, idx) in users" :key="u.id" :style="getAvatarStyle(u, idx, users.length)">
             <img :src="u.avatar || 'default-avatar.png'" class="avatar" @click.stop="openChat(u)">
-            <div v-if="unreadAnonymous[u.id] > 0" class="unread-anonymous" @click.stop="openAnonymousListFromBubble(u.id)">{{
+            <!-- <div v-if="unreadAnonymous[u.id] > 0" class="unread-anonymous" @click.stop="openAnonymousListFromBubble(u.id)">{{
                 unreadAnonymous[u.id] }}
-            </div>
+            </div> -->
             <div class="card">
                 <p style="font-size:18px;font-weight:bold;color:#f44336;">{{u.nickname}}</p>
                 <p class="user-info">
@@ -528,7 +528,7 @@
                  <div v-if="sortedAnonymousList.length === 0" style="text-align: center; color: #888; padding: 20px;">暂无匿名消息</div>
             </div>
              <div v-if="replyToAnonymous" class="anonymous-reply-area">
-                <input v-model="anonymousReplyContent" @keyup.enter="sendReplyToAnonymous" :placeholder="'回复给 ' + getAnonymousSenderNickname(replyToAnonymous.fromUserId) + '...'">
+                <input v-model="anonymousReplyContent" @keyup.enter="sendReplyToAnonymous" :placeholder="'回复给他～...'">
                 <button @click="sendReplyToAnonymous">发送</button>
             </div>
         </div>
@@ -732,37 +732,10 @@
                 if (!this.anonymousReplyContent.trim() || !this.replyToAnonymous) {
                     return;
                 }
-
-                if (!this.ws || this.ws.readyState !== 1) {
-                    alert('聊天连接未建立，请稍后重试');
-                    return;
-                }
-
-                const msg = {
-                    toUserId: this.replyToAnonymous.fromUserId,
-                    content: this.anonymousReplyContent.trim(),
-                    type: 'text',
-                    isAnonymous: false
-                };
-
-                console.log("发送非匿名回复:", msg);
-                this.ws.send(JSON.stringify(msg));
-
-                this.anonymousReplyContent = '';
-                this.replyToAnonymous = null;
-                alert('回复已发送');
-                if (this.replyToAnonymous && this.replyToAnonymous.fromUserId) {
-                    this.unreadAnonymous[this.replyToAnonymous.fromUserId] = 0;
-                    this.updateTotalUnreadNotificationCount();
-                }
+                this.sendAnonymousReply();
             },
             async sendAnonymousReply() {
                 if (!this.anonymousReplyContent.trim() || !this.replyToAnonymous) {
-                    return;
-                }
-
-                if (!this.ws || this.ws.readyState !== 1) {
-                    alert('聊天连接未建立，请稍后重试');
                     return;
                 }
 
@@ -770,36 +743,45 @@
                     fromUserId: this.user.id,
                     toUserId: this.replyToAnonymous.fromUserId,
                     content: this.anonymousReplyContent.trim(),
-                    type: 'text',
-                    isAnonymous: true,
                     replyToId: this.replyToAnonymous.id
                 };
 
-                console.log("发送匿名回复:", msg);
-                this.ws.send(JSON.stringify(msg));
+                try {
+                    const resp = await fetch(BASE_URL + '/anonymous/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(msg)
+                    });
 
-                this.anonymousReplyContent = '';
-                alert('回复已发送 (匿名)');
-
-                if (this.replyToAnonymous && this.replyToAnonymous.id && this.user) {
-                    try {
-                        const markReadResp = await fetch(BASE_URL + `/anonymous/markSingleAsRead?messageId=${this.replyToAnonymous.id}&toUserId=${this.user.id}`, { method: 'POST' });
-                        if (markReadResp.ok) {
-                            console.log(`成功调用后端标记消息 ${this.replyToAnonymous.id} 为已读。`);
-                            const repliedMsg = this.anonymousList.find(m => m.id === this.replyToAnonymous.id);
-                            if (repliedMsg) {
-                                repliedMsg.isRead = true;
-                                this.anonymousList.sort((a, b) => {
-                                    if (a.isRead !== b.isRead) { return a.isRead ? 1 : -1; }
-                                    return new Date(b.timestamp) - new Date(a.timestamp);
-                                });
+                    if (resp.ok) {
+                        this.anonymousReplyContent = '';
+                        alert('回复已发送 (匿名)');
+                        if (this.replyToAnonymous && this.replyToAnonymous.id && this.user) {
+                            try {
+                                const markReadResp = await fetch(BASE_URL + `/anonymous/markSingleAsRead?messageId=${this.replyToAnonymous.id}&toUserId=${this.user.id}`, { method: 'POST' });
+                                if (markReadResp.ok) {
+                                    console.log(`成功调用后端标记消息 ${this.replyToAnonymous.id} 为已读。`);
+                                    const repliedMsg = this.anonymousList.find(m => m.id === this.replyToAnonymous.id);
+                                    if (repliedMsg) {
+                                        repliedMsg.isRead = true;
+                                        this.anonymousList.sort((a, b) => {
+                                            if (a.isRead !== b.isRead) { return a.isRead ? 1 : -1; }
+                                            return new Date(b.timestamp) - new Date(a.timestamp);
+                                        });
+                                    }
+                                } else {
+                                    console.error("调用后端标记单条已读接口失败:", markReadResp.status);
+                                }
+                            } catch (error) {
+                                console.error("调用后端标记单条已读接口发生错误:", error);
                             }
-                        } else {
-                            console.error("调用后端标记单条已读接口失败:", markReadResp.status);
                         }
-                    } catch (error) {
-                        console.error("调用后端标记单条已读接口发生错误:", error);
+                    } else {
+                        alert('发送匿名回复失败');
                     }
+                } catch (error) {
+                    console.error('发送匿名回复错误:', error);
+                    alert('发送匿名回复时发生错误');
                 }
             },
             formatTime(ts) {
