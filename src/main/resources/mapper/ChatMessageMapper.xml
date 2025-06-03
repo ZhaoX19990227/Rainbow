@@ -22,4 +22,19 @@
         ORDER BY timestamp DESC
         LIMIT #{limit}
     </select>
+    <select id="countUnreadMessages" resultType="java.util.Map">
+        SELECT from_user_id as userId, COUNT(*) as count
+        FROM chat_message
+        WHERE to_user_id = #{userId}
+          AND is_read = 0
+          AND is_anonymous = 0
+        GROUP BY from_user_id
+    </select>
+    <update id="markAsRead">
+        UPDATE chat_message
+        SET is_read = 1
+        WHERE from_user_id = #{fromUserId}
+          AND to_user_id = #{toUserId}
+          AND is_read = 0
+    </update>
 </mapper> 

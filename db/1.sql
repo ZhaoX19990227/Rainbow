@@ -19,6 +19,7 @@ create table if not exists chat_message
     content      text                                 not null,
     type         varchar(20)                          not null,
     is_anonymous tinyint(1) default 0                 null,
+    is_read      tinyint(1) default 0                 null,
     timestamp    datetime   default CURRENT_TIMESTAMP null
 );
 

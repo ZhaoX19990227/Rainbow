@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rainbow.mapper.AnonymousMessageMapper">
+    <resultMap id="anonymousMessageMap" type="com.rainbow.entity.AnonymousMessage">
+        <id property="id" column="id"/>
+        <result property="fromUserId" column="from_user_id"/>
+        <result property="toUserId" column="to_user_id"/>
+        <result property="content" column="content"/>
+        <result property="replyToId" column="reply_to_id"/>
+        <result property="timestamp" column="timestamp"/>
+        <result property="isRead" column="is_read"/>
+    </resultMap>
+    <insert id="insert" parameterType="com.rainbow.entity.AnonymousMessage" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO anonymous_message (from_user_id, to_user_id, content, reply_to_id, timestamp, is_read)
+        VALUES (#{fromUserId}, #{toUserId}, #{content}, #{replyToId}, NOW(), FALSE)
+    </insert>
+    <select id="findByToUser" resultMap="anonymousMessageMap">
+        SELECT * FROM anonymous_message
+        WHERE to_user_id = #{toUserId} AND is_read = FALSE
+        ORDER BY is_read ASC, timestamp DESC
+    </select>
+    <select id="findReplies" resultMap="anonymousMessageMap">
+        SELECT * FROM anonymous_message
+        WHERE reply_to_id = #{replyToId}
+        ORDER BY timestamp ASC
+    </select>
+    <update id="markAsReadByMessageId">
+        UPDATE anonymous_message
+        SET is_read = TRUE
+        WHERE id = #{messageId} AND to_user_id = #{toUserId}
+    </update>
+    <update id="markAllAsReadByRecipient">
+         UPDATE anonymous_message
+         SET is_read = TRUE
+         WHERE to_user_id = #{toUserId} AND is_read = FALSE
+    </update>
+</mapper>

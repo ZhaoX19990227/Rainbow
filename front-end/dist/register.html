@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>注册 - Rainbow</title>
+    <script src="config.js"></script>
+    <script src="https://unpkg.com/vue@3"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        .jelly-card {
+            background: rgba(255,255,255,0.25);
+            box-shadow: 0 8px 32px 0 rgba(31,38,135,0.37), 0 1.5px 8px 0 rgba(255,255,255,0.2) inset;
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            border: 1.5px solid rgba(255,255,255,0.18);
+            padding: 48px 36px 36px 36px;
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            transition: transform 0.2s cubic-bezier(.34,1.56,.64,1), box-shadow 0.2s;
+        }
+        .jelly-card:hover {
+            transform: scale(1.03) rotateX(6deg);
+            box-shadow: 0 16px 48px 0 rgba(31,38,135,0.37), 0 2.5px 16px 0 rgba(255,255,255,0.25) inset;
+        }
+        h2 {
+            text-align: center;
+            color: #fff;
+            margin-bottom: 32px;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 8px #a6c1ee;
+        }
+        input, select {
+            margin: 12px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: none;
+            background: rgba(255,255,255,0.5);
+            font-size: 18px;
+            outline: none;
+            transition: box-shadow 0.2s;
+        }
+        input:focus, select:focus {
+            box-shadow: 0 0 0 2px #a6c1ee;
+        }
+        button {
+            margin-top: 24px;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(90deg, #a6c1ee, #fbc2eb);
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(166,193,238,0.2);
+            transition: background 0.2s, transform 0.2s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #fbc2eb, #a6c1ee);
+            transform: scale(1.04);
+        }
+        .switch-tip {
+            margin-top: 18px;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 1px 4px #a6c1ee;
+        }
+        .switch-tip a {
+            color: #fff;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="jelly-card">
+        <h2>注册</h2>
+        <input v-model="registerForm.nickname" placeholder="昵称">
+        <input type="password" v-model="registerForm.password" placeholder="密码">
+        <input type="file" @change="handleAvatarUpload" accept="image/*">
+        <input v-model="registerForm.height" type="number" placeholder="身高(cm)">
+        <input v-model="registerForm.weight" type="number" placeholder="体重(kg)">
+        <input v-model="registerForm.location" placeholder="所在城市">
+        <select v-model="registerForm.attribute">
+            <option value="1">1</option>
+            <option value="0">0</option>
+            <option value="side">side</option>
+        </select>
+        <button @click="register">注册</button>
+        <div class="switch-tip">
+            已有账号？<a href="login.html">返回登录</a>
+        </div>
+    </div>
+</div>
+<script>
+    const BASE_URL = window.BASE_URL;
+    const { createApp } = Vue;
+    createApp({
+        data() {
+            return {
+                registerForm: {
+                    nickname: '',
+                    password: '',
+                    avatar: '',
+                    height: '',
+                    weight: '',
+                    location: '',
+                    attribute: '1'
+                }
+            };
+        },
+        methods: {
+            async handleAvatarUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const formData = new FormData();
+                formData.append('avatar', file);
+                const resp = await fetch(BASE_URL + '/user/uploadAvatar', {
+                    method: 'POST',
+                    body: formData
+                });
+                if (resp.ok) {
+                    this.registerForm.avatar = await resp.text();
+                } else {
+                    alert('头像上传失败');
+                }
+            },
+            async register() {
+                const formData = new FormData();
+                formData.append('nickname', this.registerForm.nickname);
+                formData.append('password', this.registerForm.password);
+                formData.append('height', this.registerForm.height);
+                formData.append('weight', this.registerForm.weight);
+                formData.append('location', this.registerForm.location);
+                formData.append('attribute', this.registerForm.attribute);
+                formData.append('avatar', this.registerForm.avatar);
+
+                const resp = await fetch(BASE_URL + '/user/register', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (resp.ok) {
+                    alert('注册成功');
+                    window.location.href = 'login.html';
+                } else {
+                    alert('注册失败');
+                }
+            }
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
