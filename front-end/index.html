@@ -504,28 +504,60 @@
                     this.arrangeUsers();
                 }
             },
-            getAvatarStyle(user, idx, total) {
-                if (!user.distance) return {};
-                const angle = Math.random() * Math.PI * 2;
-                const distance = Math.min(user.distance * 10 + 120, 280);
-                const x = Math.cos(angle) * distance;
-                const y = Math.sin(angle) * distance;
-                return {
-                    transform: `translate(${x}px, ${y}px)`,
-                    zIndex: total - idx
-                };
-            },
             arrangeUsers() {
-                this.users.forEach(user => {
-                    if (user.distance) {
-                        const angle = Math.random() * Math.PI * 2;
-                        const distance = Math.min(user.distance * 10 + 120, 280);
-                        const x = Math.cos(angle) * distance;
-                        const y = Math.sin(angle) * distance;
-                        user.x = x;
-                        user.y = y;
-                    }
+                const centerX = 350; // 圆盘中心 X 坐标 (基于 #board 700x700)
+                const centerY = 350; // 圆盘中心 Y 坐标
+                const baseDistance = 200; // **增加基础扩散距离**
+                const distanceScale = 40; // **增加距离缩放因子**
+                const maxDistance = 350; // **调整最大扩散距离**
+
+                const totalOthers = this.users.length;
+
+                // 打乱用户顺序，避免按固定索引排列造成规律性
+                const shuffledUsers = [...this.users].sort(() => Math.random() - 0.5);
+
+                shuffledUsers.forEach((user) => { // idx is not directly used for angle now
+                    // 使用一个随机角度
+                    const angle = Math.random() * Math.PI * 2;
+
+                    // 根据用户距离计算扩散程度，加上基础距离，并限制在最大范围内
+                    let distance = user.distance ? Math.min(user.distance * distanceScale + baseDistance, maxDistance) : baseDistance;
+
+                    // 计算用户头像中心相对于圆盘中心的偏移量
+                    user.offsetX = Math.cos(angle) * distance;
+                    user.offsetY = Math.sin(angle) * distance;
+
+                    // 计算头像wrapper的最终位置 (基于圆盘中心，并考虑头像尺寸居中)
+                    user.finalX = centerX + user.offsetX - 45; // 减去头像宽度的一半 (90/2)
+                    user.finalY = centerY + user.offsetY - 45; // 减去头像高度的一半 (90/2)
+
+                     // 保留原始索引以便设置 zIndex (如果需要按原始顺序层叠)
+                     // 或者根据距离设置 zIndex (距离越近 zIndex 越高)
+                     user.originalIndex = this.users.findIndex(u => u.id === user.id); // Find original index
+                     user.calculatedDistance = distance; // Store calculated distance for zIndex
                 });
+
+                // 将打乱并计算好位置的用户重新赋值给 users，保留原始顺序以确保 Vue 的 key 和 transition 正确
+                this.users.forEach(user => {
+                     const found = shuffledUsers.find(u => u.id === user.id);
+                     if (found) {
+                         user.finalX = found.finalX;
+                         user.finalY = found.finalY;
+                         user.calculatedDistance = found.calculatedDistance;
+                     }
+                });
+                // 可以选择根据 calculatedDistance 重新排序 users 数组，以便 zIndex 和渲染顺序一致
+                this.users.sort((a, b) => a.calculatedDistance - b.calculatedDistance);
+
+            },
+            getAvatarStyle(user, idx, total) { // idx and total now refer to the sorted users array
+                 // 使用 arrangeUsers 中计算好的最终位置 finalX 和 finalY
+                 // zIndex 可以使用 sorted index (idx) 或 calculatedDistance
+                 // 使用 sorted index (idx) 确保距离近的在上面 (zIndex 高)
+                 return {
+                     transform: `translate(${user.finalX}px, ${user.finalY}px)`,
+                     zIndex: idx + 1 // 距离越近（排序靠后），zIndex 越高
+                 };
             },
             logout() {
                 localStorage.removeItem('rainbow_user');
@@ -640,17 +672,9 @@
                     const msg = {
                         toUserId: this.chatTarget.id,
                         content: url,
-                        type: 'image',
-                        fromUserId: this.user.id,
-                        timestamp: Date.now()
+                        type: 'image'
                     };
                     this.ws.send(JSON.stringify(msg));
-
-                    this.$nextTick(() => {
-                        const el = this.$refs.chatHistory;
-                        if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
-                    });
-
                 } else {
                     alert('图片上传失败');
                 }
@@ -664,17 +688,9 @@
                 const msg = {
                     toUserId: this.chatTarget.id,
                     content: e,
-                    type: 'emoji',
-                    fromUserId: this.user.id,
-                    timestamp: Date.now()
+                    type: 'emoji'
                 };
                 this.ws.send(JSON.stringify(msg));
-
-                this.$nextTick(() => {
-                    const el = this.$refs.chatHistory;
-                    if (el && el.scrollTop !== undefined) el.scrollTop = el.scrollHeight;
-                });
-
                 this.showEmojiPanel = false;
             },
             emojiHtml(e) {
